@@ -1,0 +1,313 @@
+---
+title: "NI_Sand Stabilization Regression"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r tools, echo = F, message = F, include = F}
+
+library(tidyverse)
+library(knitr)
+library(readr)
+#install.packages("stargazer")
+library(stargazer)
+#install.packages("janitor")
+library(janitor)
+
+#options(repos=structure(c(CRAN="http://cran.stat.ucla.edu/")))
+
+```
+
+Our Research Questions:
+1. Does beach width significantly impact hotel revenue?
+2. Does ecotourism significantly impact hotel revenue as measured by amount of coral and distance to popular dive sites?
+
+
+```{r echo = F, message = F, include = F}
+
+# Import data
+data <- read_csv("G:/beach_width/All Cities/final_regression_tables/regression_10km.csv")
+#View(data)
+
+names(data)
+
+# Correct data classes
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$City <- as.factor(data$City)
+
+ncol(data)
+nrow(data)
+
+# Add a column with average price
+data1 <- data %>%
+  select(2, 6:37) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+names(data1)[3] <- "num_reviews"
+#View(data1)
+ncol(data1)
+# Clean up data to plot
+data2 <- data1 %>% 
+  select(2:3, 20:32,34, -latitude, -longitude, -near_dist_shore)
+#View(data2)
+
+#plot(data2)
+
+```
+
+Thoughts about our data:
+- Beach width is likely a quadratic relationship: people generally enjoy wider beaches and we would expect that they are willing to pay for more this, but too wide a beach is unattractive due to the long walking times to the ocean.
+- The number of dive sites is likely a logistic relationship. Divers generally want to visit an area with more dive sites, but at a certain point, the marginal value of an extra dive site is $0 because divers are overloaded with sites.
+- The amount of coral cover is also likely logistic (or linear) because tourists value cover, but if there is a lot of cover at some amount, the marginal value of more coral cover will become very little.
+- We assume that the other variables have a linear relationship (rating, amenities, distances, etc.)
+
+```{r echo = F, message = F, include = F}
+
+# Explore data
+#summary(data1)
+
+data2 <- data1 %>% 
+  select(-hotel_name, -city)
+#plot(data2)
+
+price_hist <- ggplot(data1, aes(x = avg_price)) +
+  geom_histogram()
+price_hist
+# Skewed left
+
+rating_hist <- ggplot(data1, aes(x = rating)) +
+  geom_histogram()
+rating_hist
+# Skewed right
+
+width_hist <- ggplot(data1, aes(x = beach_width)) +
+  geom_histogram()
+width_hist
+# Beach width does not appear to be normally distributed
+
+coral_hist <- ggplot(data1, aes(x = coral_dot_density)) +
+  geom_histogram()
+coral_hist
+# Not normally distributed, kind of normal with gaps in data
+
+dive_sites_hist <- ggplot(data1, aes(x = num_dive_sites)) +
+  geom_histogram()
+dive_sites_hist
+# Not normally distributed, could consider modeling as yes/no
+
+dist_reef_hist <- ggplot(data1, aes(x = dist_to_reef)) +
+  geom_histogram()
+dist_reef_hist
+# Normally distributed, slightly skewed left
+
+dist_dive_hist <- ggplot(data1, aes(x = dist_to_dive)) +
+  geom_histogram()
+dist_dive_hist
+# Not normally distributed, obvious groupings either close or far from dive sites. All far sites are in Key West.
+
+beach_pt <- ggplot(data1, aes(x = beach_width, y = avg_price )) +
+  geom_point()
+beach_pt
+# Looks linear, but flat with outliers
+
+dive_pt <- ggplot(data1, aes(x = dist_to_dive, y = avg_price )) +
+  geom_point()
+dive_pt
+#View(data1)
+# Obvious groupings, hotels are either close or really far from the dive sites. 
+
+dist_beach_pt <- ggplot(data1, aes(x = near_dist_beach, y = avg_price )) +
+  geom_point()
+dist_beach_pt
+# Linear, but appears can charge more the farther from the beach you are (perhaps has to do with particular city?)
+
+rating_pt <- ggplot(data1, aes(x = rating, y = avg_price )) +
+  geom_point()
+rating_pt
+# Linear, higher prices for better ratings (expected)
+
+reviews_pt <- ggplot(data1, aes(x = num_rooms, y = avg_price )) +
+  geom_point()
+reviews_pt
+# Relationship unclear
+
+coral_pt <- ggplot(data1, aes(x = coral_cover, y = avg_price )) +
+  geom_point()
+coral_pt
+# Obvious 3 different groupings based on amounts of corals in different cities. Linear trend of higher price for more coral
+# Key West has one of the highest prices, but we know it is quite far from the reef, this may skew our results
+
+dive_box <- ggplot(data1, aes(x = city, y = dist_to_dive)) +
+  geom_boxplot()
+dive_box
+# Key West is an obvious outlier
+
+num_dive_box <- ggplot(data1, aes(x = city, y = num_dive_sites)) +
+  geom_boxplot()
+num_dive_box
+# Ft. Lauderdale, Miami & Boca have the most sites on avg.
+
+reef_box <- ggplot(data1, aes(x = city, y = coral_dot_density)) +
+  geom_boxplot()
+reef_box
+# Key West has more coral on average than any other city
+
+# Try PCA to find trends
+# First remove factors from data
+
+#data_pca <- data1 %>% 
+  #select(2:3,22:30)
+#View(data_pca)
+#ncol(data_pca)
+
+coral_pca <- prcomp(data_pca[1:10], scale = T)
+coral_pca
+#summary(coral_pca)
+
+#library(devtools)
+#install_github("vqv/ggbiplot")
+#library(ggbiplot)
+
+#plot <- ggbiplot(coral_pca, groups = data_pca$city)
+#plot
+```
+
+
+PC1: Distance to airport, distance to dive sites, number of dive sites, coral dots, and distance to beach dominate
+PC2: Distance to reef, distance to beach, distance to access points and number of rooms dominate 
+
+```{r results = "asis"}
+
+# Filter out Key West to see if trends greatly differ
+data_nokw <- data1 %>% 
+  filter(city != "KeyWest")
+#View(data_nokw)
+
+data_noboca <- data1 %>% 
+  filter(city != "Boca")
+#View(data_noboca)
+# Regression with everything!
+#names(data1)
+
+reg_all <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover, data = data1)
+#summary(reg_all)
+
+reg_nokw <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover, data = data_nokw)
+#summary(reg_nokw)
+
+compare_all <- stargazer(reg_all, reg_nokw, type = "html",
+                         title = "Models with all Variables",
+                         column.labels = c("All Cities", "No KW"),
+                         out = "compare.html")
+
+# Regression without amenity factors
+all_noamen <- lm(avg_price ~ rating + num_reviews + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover, data = data1)
+#summary(all_noamen)
+
+no_kw_noamen <- lm(avg_price ~ rating + num_reviews + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover, data = data_nokw)
+
+compare_noamen <- stargazer(all_noamen, no_kw_noamen, type = "html",
+                         title = "Models without Amenities",
+                         column.labels = c("All Cities", "No KW"))
+
+# Log log regressions
+
+# First, remove distance to beach of 0 and number of dive sites = 0 (this removes KW)
+data_log <- data1 %>% 
+  mutate(log(beach_width + sqrt(1 + beach_width^2))) %>% 
+  mutate(log(num_dive + sqrt(1 + num_dive^2)))
+#View(data_log)
+
+#nrow(data_log) # Sample size lower by 115 hotels
+
+# Run the model:
+library(nnet)
+# Tried using multinom, but had error of too many weights
+
+# Not sure if this is correct way to set it up:
+log_log_city <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + beach_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + num_dive + log(coral_cover) + city, data = data_log)
+#summary(log_log)
+
+log_log <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + beach_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + num_dive + log(coral_cover), data = data_log)
+summary(log_log)
+
+table <- stargazer(log_log, log_log_city, type = "html",
+                   title = "Log Log Model",
+                   column.labels = c("Log Log", "With Cities"))
+
+```
+
+Regressing all variables on average price:
+All data: 
+- The following coefficients are directionally off: reviews, bar, wheelchair accessible, wifi, non-smoking, breakfast, free parking, distance to beach, distance to airport, number of dive sites.
+- The intercept, rating, pool, conference, air transport, beachfront and coral area are all significant
+
+```{r message = F, include = F}
+
+# Beach width regression
+#names(data1)
+
+beach_width <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport, data = data1)
+summary(beach_width)
+
+beach_width_1 <- lm(avg_price ~ rating + num_reviews + conference + air_trans + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport, data = data1)
+summary(beach_width_1)
+
+#Check that data
+par(mfrow = c(2,2))
+plot(beach_width)
+
+par(mfrow = c(2,2))
+plot(beach_width_1)
+
+
+```
+
+
+Regressing beach width on average price:
+
+1. Regression with rating, number of rooms, all hotel amenities, distance to beach/access points/airport and beach width
+- Rating, number of rooms, conference center, airport transport, beachfront, beach width, distance to access points and distance to airport are all significant
+- coefficients on distance to airport, distance to beach and some amenities are counterintuitive
+- coefficient for beach width is 7.49 and significant (p < 0.10)
+
+2. Regression with rating, number of rooms, conference, airport transport, beachfront, distance to beach, distance to access points and distance to airport
+- All coefficients significant at some level
+- Beach width coefficient significant $6.20 (p < 0.10)
+
+
+```{r echo = F, message = F, include = F}
+
+# Coral regression
+names(data1)
+
+# Regress with all hotel amenities
+coral_lm <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover, data = data1)
+summary(coral_lm)
+
+coral_lm_1 <- lm(avg_price ~ rating + num_reviews + conference + air_trans + beachfront + near_dist_beach + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover, data = data1)
+summary(coral_lm_1)
+
+
+```
+
