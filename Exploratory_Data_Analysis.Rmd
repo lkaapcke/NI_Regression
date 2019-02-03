@@ -1,0 +1,160 @@
+---
+title: "Exploratory Data Analysis"
+author: "Lauren Kaapcke"
+date: "February 3, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Packages:
+```{r}
+
+library(tidyverse)
+library(knitr)
+#install.packages(janitor)
+library(janitor)
+
+```
+
+Data:
+```{r}
+
+# Import
+data <- regression_10km <- read_csv("regression_10km.csv")
+
+# Correct data classes
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$City <- as.factor(data$City)
+
+
+
+```
+
+```{r echo = F, message = F, include = F}
+
+# Explore data
+#summary(data1)
+
+data2 <- data1 %>% 
+  select(-hotel_name, -city)
+#plot(data2)
+
+price_hist <- ggplot(data1, aes(x = avg_price)) +
+  geom_histogram()
+price_hist
+# Skewed left
+
+rating_hist <- ggplot(data1, aes(x = rating)) +
+  geom_histogram()
+rating_hist
+# Skewed right
+
+width_hist <- ggplot(data1, aes(x = beach_width)) +
+  geom_histogram()
+width_hist
+# Beach width does not appear to be normally distributed
+
+coral_hist <- ggplot(data1, aes(x = coral_dot_density)) +
+  geom_histogram()
+coral_hist
+# Not normally distributed, kind of normal with gaps in data
+
+dive_sites_hist <- ggplot(data1, aes(x = num_dive_sites)) +
+  geom_histogram()
+dive_sites_hist
+# Not normally distributed, could consider modeling as yes/no
+
+dist_reef_hist <- ggplot(data1, aes(x = dist_to_reef)) +
+  geom_histogram()
+dist_reef_hist
+# Normally distributed, slightly skewed left
+
+dist_dive_hist <- ggplot(data1, aes(x = dist_to_dive)) +
+  geom_histogram()
+dist_dive_hist
+# Not normally distributed, obvious groupings either close or far from dive sites. All far sites are in Key West.
+
+beach_pt <- ggplot(data1, aes(x = beach_width, y = avg_price )) +
+  geom_point()
+beach_pt
+# Looks linear, but flat with outliers
+
+dive_pt <- ggplot(data1, aes(x = dist_to_dive, y = avg_price )) +
+  geom_point()
+dive_pt
+#View(data1)
+# Obvious groupings, hotels are either close or really far from the dive sites. 
+
+dist_beach_pt <- ggplot(data1, aes(x = near_dist_beach, y = avg_price )) +
+  geom_point()
+dist_beach_pt
+# Linear, but appears can charge more the farther from the beach you are (perhaps has to do with particular city?)
+
+rating_pt <- ggplot(data1, aes(x = rating, y = avg_price )) +
+  geom_point()
+rating_pt
+# Linear, higher prices for better ratings (expected)
+
+reviews_pt <- ggplot(data1, aes(x = num_rooms, y = avg_price )) +
+  geom_point()
+reviews_pt
+# Relationship unclear
+
+coral_pt <- ggplot(data1, aes(x = coral_cover, y = avg_price )) +
+  geom_point()
+coral_pt
+# Obvious 3 different groupings based on amounts of corals in different cities. Linear trend of higher price for more coral
+# Key West has one of the highest prices, but we know it is quite far from the reef, this may skew our results
+
+dive_box <- ggplot(data1, aes(x = city, y = dist_to_dive)) +
+  geom_boxplot()
+dive_box
+# Key West is an obvious outlier
+
+num_dive_box <- ggplot(data1, aes(x = city, y = num_dive_sites)) +
+  geom_boxplot()
+num_dive_box
+# Ft. Lauderdale, Miami & Boca have the most sites on avg.
+
+reef_box <- ggplot(data1, aes(x = city, y = coral_dot_density)) +
+  geom_boxplot()
+reef_box
+# Key West has more coral on average than any other city
+
+# Try PCA to find trends
+# First remove factors from data
+
+#data_pca <- data1 %>% 
+  #select(2:3,22:30)
+#View(data_pca)
+#ncol(data_pca)
+
+coral_pca <- prcomp(data_pca[1:10], scale = T)
+coral_pca
+#summary(coral_pca)
+
+#library(devtools)
+#install_github("vqv/ggbiplot")
+#library(ggbiplot)
+
+#plot <- ggbiplot(coral_pca, groups = data_pca$city)
+#plot
+```
