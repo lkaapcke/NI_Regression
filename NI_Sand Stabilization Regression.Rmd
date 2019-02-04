@@ -178,7 +178,7 @@ summary(log_log_simple)
 # Variables positive, Boca shown to be highest, try without Boca
 
 # Remove Boca
-lglg_simple_nob <- lm(log(avg_price) ~ log(coral_cover) + log_width + city, data = data_log_nob)
+lglg_simple_nob <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + dive_site + city, data = data_log_nob)
 summary(lglg_simple_nob)
 # Variables still directionally correct and now coral is significant. 
 
