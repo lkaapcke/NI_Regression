@@ -50,6 +50,16 @@ data$City <- as.factor(data$City)
 
 ```{r echo = F, message = F, include = F}
 
+# Clean up data to plot
+data2 <- data1 %>% 
+  select(2:3, 20:32,34, -latitude, -longitude, -near_dist_shore)
+#View(data2)
+
+#plot(data2)
+
+
+
+
 # Explore data
 #summary(data1)
 
