@@ -1,0 +1,168 @@
+---
+title: "NI_Sand Stabilization Regression"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r tools, echo = F, message = F, include = F}
+
+library(tidyverse)
+library(knitr)
+library(readr)
+#install.packages("stargazer")
+library(stargazer)
+#install.packages("janitor")
+library(janitor)
+
+```
+
+Our Research Questions:
+1. Does beach width significantly impact hotel revenue?
+2. Does ecotourism significantly impact hotel revenue as measured by amount of coral and distance to popular dive sites?
+
+```{r echo = F, message = F, include = F}
+
+# Import data
+data <- read_csv("regression_20km.csv")
+#View(data)
+
+# Correct data classes
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$City <- as.factor(data$City)
+data$dive_site <- as.factor(data$dive_site)
+
+# Add a column with average price
+data1 <- data %>%
+  select(2, 6:38, -LATITUDE, -LONGITUDE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+
+# Correct the rooms column to reviews
+names(data1)[3] <- "num_reviews"
+
+#View(data1)
+
+```
+
+```{r results = "asis"}
+
+# Filter out Key West
+data_nokw <- data1 %>% 
+  filter(city != "KeyWest")
+#View(data_nokw)
+
+# Filter out Boca
+data_noboca <- data1 %>% 
+  filter(city != "Boca")
+#View(data_noboca)
+
+# Regression with everything, using # of dive sites
+
+reg_all2 <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover + city, data = data1)
+#summary(reg_all)
+
+reg_nokw2 <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover + city, data = data_nokw)
+#summary(reg_nokw)
+
+reg_noboca2 <- lm(avg_price ~ rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover + city, data = data_noboca)
+
+compare_all2 <- stargazer(reg_all2, reg_nokw2, reg_noboca2, type = "html",
+                         title = "Models with all Variables - 20km",
+                         column.labels = c("All Cities", "No KW", "No Boca"),
+                         out = "compare20km.html")
+
+# Regression without amenity factors
+all_noamen2 <- lm(avg_price ~ rating + num_reviews + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover + city, data = data1)
+#summary(all_noamen)
+
+no_kw_noamen2 <- lm(avg_price ~ rating + num_reviews + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover + city, data = data_nokw)
+
+no_b_noamen2 <- lm(avg_price ~ rating + num_reviews + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + coral_cover + city, data = data_noboca)
+
+compare_noamen2 <- stargazer(all_noamen2, no_kw_noamen2, no_b_noamen2, type = "html",
+                         title = "Models without Amenities - 20km",
+                         column.labels = c("All Cities", "No KW", "No Boca"),
+                         out = "compare_noamen20km.html")
+
+```
+
+```{r}
+
+# Log log regressions
+
+# First, transform columns with zeroes
+data_log <- data1 %>% 
+  mutate(log_width = log(beach_width + sqrt(1 + beach_width^2))) %>% 
+  mutate(log_dive = log(num_dive + sqrt(1 + num_dive^2)))
+View(data_log)
+
+data_log_nob <- data_log %>%
+  filter(city != "Boca")
+View(data_log_nob)
+
+# Log log model with no amenities
+log_log_city20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + log_dive + log(coral_cover) + city, data = data_log)
+#summary(log_log)
+
+# Now without boca
+log_log_nob20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + log_dive + log(coral_cover) + city, data = data_log_nob)
+
+# Model with binary for dive sites
+log_log_dive20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + dive_site + log(coral_cover) + city, data = data_log)
+
+table20 <- stargazer(log_log_city, log_log_nob, log_log_dive, type = "html",
+                   title = "Log Log Model - 20km",
+                   column.labels = c("All Cities", "W/o Boca", "Binary Dive Site"),
+                   out = "log-log_20.html")
+
+# Dive site binary, remove distance to dive
+log_log_dive1_20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + dive_site + log(coral_cover) + city, data = data_log)
+
+# Adding back some amenities
+log_log_dive2_20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log_width + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + dive_site + log(coral_cover) + city + conference + air_trans + beachfront, data = data_log)
+
+compare_log20 <- stargazer(log_log_dive, log_log_dive1_20, log_log_dive2_20, type = "html",
+                         title = "Log-Log Dive Models - 20km",
+                         column.labels = c("Binary Dive Site", "No Dist to Dive", "Add Amenities"),
+                         out = "loglog-dive_20.html")
+
+```
+
+```{r}
+
+# Try removing beach width
+ll_dive_20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + dive_site + log(coral_cover) + city, data = data_log)
+
+ll_dive_nodist_20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + dive_site + log(coral_cover) + city, data = data_log)
+
+ll_dive_amen_20 <- lm(log(avg_price) ~ log(rating) + log(num_reviews) + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + dive_site + log(coral_cover) + city + conference + air_trans + beachfront, data = data_log)
+
+compare_ll_20 <- stargazer(ll_dive, ll_dive_nodist, ll_dive_amen, type = "html",
+                         title = "Log-Log Dive Models",
+                         column.labels = c("Binary Dive Site", "No Dist to Dive", "Add Amenities"),
+                         out = "ll-dive-20.html")
+
+
+```
+
+
