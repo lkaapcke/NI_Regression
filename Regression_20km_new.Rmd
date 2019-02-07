@@ -1,0 +1,187 @@
+---
+title: "NI_Sand Stabilization Regression"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r tools, echo = F, message = F, include = F}
+
+library(tidyverse)
+library(knitr)
+library(readr)
+#install.packages("stargazer")
+library(stargazer)
+#install.packages("janitor")
+library(janitor)
+library(MASS)
+install.packages("leaps")
+library(leaps)
+
+```
+
+Our Research Questions:
+1. Does beach width significantly impact hotel revenue?
+2. Does ecotourism significantly impact hotel revenue as measured by amount of coral and distance to popular dive sites?
+
+```{r echo = F, message = F, include = F}
+
+# Import data
+data <- read_csv("regression_20km.csv")
+#View(data)
+
+# Correct data classes
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$City <- as.factor(data$City)
+data$dive_site <- as.factor(data$dive_site)
+data$near_shore <- as.factor(data$near_shore)
+data$mid_shore <- as.factor(data$mid_shore)
+data$far_shore <- as.factor(data$far_shore)
+
+# Add a column with average price
+data1 <- data %>%
+  dplyr::select(2, 6:41, -LATITUDE, -LONGITUDE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+
+# Correct the rooms column to reviews
+names(data1)[3] <- "num_reviews"
+
+#View(data1)
+
+```
+
+```{r results = "asis"}
+
+# Filter out Key West
+data_nokw <- data1 %>% 
+  filter(city != "KeyWest")
+#View(data_nokw)
+
+# Filter out Boca
+data_noboca <- data1 %>% 
+  filter(city != "Boca")
+#View(data_noboca)
+
+compare_all2 <- stargazer(reg_all2, reg_nokw2, reg_noboca2, type = "html",
+                         title = "Models with all Variables - 20km",
+                         column.labels = c("All Cities", "No KW", "No Boca"),
+                         out = "compare20km.html")
+
+```
+
+```{r}
+
+# Linear regression for coral simple:
+
+coral_lm <- lm(avg_price ~ coral_cover + rating + near_dist_beach, data = data1)
+summary(coral_lm)
+
+coral_lglg <- lm(log(avg_price) ~ log(coral_cover) + log(rating) + log(near_dist_beach) + log(beach_width + sqrt(1 + beach_width^2)) + near_shore, data = data1)
+summary(coral_lglg)
+
+coral_lglg <- lm(log(avg_price) ~ log(coral_cover) + log(rating) + log(near_dist_beach), data = data1)
+summary(coral_lglg)
+
+coralbeach_lm <- lm(avg_price ~ coral_cover + beach_width + rating + near_dist_beach, data = data1)
+summary(coralbeach_lm)
+
+# Try adding cities
+coral_city_lm <- lm(avg_price ~ coral_cover + rating + near_dist_beach + city, data = data1)
+summary(coral_city_lm)
+
+coralbeach_city_lm <- lm(avg_price ~ coral_cover + beach_width + rating + near_dist_beach, data = data1)
+summary(coralbeach_city_lm)
+
+coral_city_lm_low <- lm(low_price ~ coral_cover + rating + near_dist_beach + city, data = data1)
+summary(coral_city_lm_low)
+
+coralbeach_city_lm_low <- lm(low_price ~ coral_cover + beach_width + rating + near_dist_beach, data = data1)
+summary(coralbeach_city_lm_low)
+
+```
+
+```{r}
+
+# Try a stepwise regression
+all_lm <- lm(avg_price ~ coral_cover + beach_width + rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + dive_site, data = data1)
+
+step <- stepAIC(all_lm, direction = "both")
+step$anova
+
+# Model recommended by stepwise regression: avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + air_trans + beachfront + dive_site
+
+test <- lm(avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + air_trans + beachfront + dive_site + beach_width, data = data1)
+summary(test)
+
+all_lm_lglg <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + log(num_dive + sqrt(1 + num_dive^2)) + dive_site, data = data1)
+
+step_lglg <- stepAIC(all_lm_lglg, direction = "both")
+step_lglg$anova
+
+# Model recommended by stepwise log log regression: log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool +     conference + mtg_rooms + concierge + gym + multilingual + breakfast + air_trans + beachfront
+
+test_lglg <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + conference + concierge + gym + multilingual + air_trans + beachfront, data = data1)
+summary(test_lglg)
+
+data_nob <- data1 %>% 
+  filter(city != "Boca")
+
+all_lm_nob <- lm(avg_price ~ coral_cover + beach_width + rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + dive_site, data = data_nob)
+
+step_nob <- stepAIC(all_lm, direction = "both")
+step_nob$anova
+
+test_nob <- lm(avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + air_trans + beachfront + dive_site, data = data_nob)
+summary(test_nob)
+
+width <- lm(beach_width ~ coral_cover + dist_to_reef + city, data = data1)
+summary(width)
+
+width_nob <- lm(beach_width ~ coral_cover + dist_to_reef, data = data_nob)
+summary(width_nob)
+
+data_nok <- data1 %>% 
+  filter(city != "KeyWest")
+
+width_nok <- lm(beach_width ~ coral_cover + dist_to_reef, data = data_nok)
+summary(width_nok)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
