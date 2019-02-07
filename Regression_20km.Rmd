@@ -50,10 +50,13 @@ data$Laundry <- as.factor(data$Laundry)
 data$Gym <- as.factor(data$Gym)
 data$City <- as.factor(data$City)
 data$dive_site <- as.factor(data$dive_site)
+data$near_shore <- as.factor(data$near_shore)
+data$mid_shore <- as.factor(data$mid_shore)
+data$far_shore <- as.factor(data$far_shore)
 
 # Add a column with average price
 data1 <- data %>%
-  select(2, 6:38, -LATITUDE, -LONGITUDE) %>% 
+  select(2, 6:41, -LATITUDE, -LONGITUDE) %>% 
   mutate(avg_price = (Low_Price + High_Price)/2) %>% 
   clean_names()
 
