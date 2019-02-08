@@ -19,7 +19,7 @@ library(stargazer)
 #install.packages("janitor")
 library(janitor)
 library(MASS)
-install.packages("leaps")
+#install.packages("leaps")
 library(leaps)
 
 ```
