@@ -82,11 +82,6 @@ data_noboca <- data1 %>%
   filter(city != "Boca")
 #View(data_noboca)
 
-compare_all2 <- stargazer(reg_all2, reg_nokw2, reg_noboca2, type = "html",
-                         title = "Models with all Variables - 20km",
-                         column.labels = c("All Cities", "No KW", "No Boca"),
-                         out = "compare20km.html")
-
 ```
 
 ```{r}
@@ -130,8 +125,27 @@ step$anova
 
 # Model recommended by stepwise regression: avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + air_trans + beachfront + dive_site
 
-test <- lm(avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + air_trans + beachfront + dive_site + beach_width, data = data1)
-summary(test)
+step <- lm(avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + air_trans + beachfront + dive_site, data = data1)
+summary(step)
+
+beach_lm <- lm(avg_price ~ beach_width + rating + pool + conference + mtg_rooms + air_trans + beachfront)
+
+idea <- lm(avg_price ~ coral_cover + rating + pool + conference + air_trans + beachfront + dive_site + dist_to_reef + dist_to_access_points, data = data1)
+summary(idea)
+
+city_lm <- lm(avg_price ~ coral_cover + rating + pool + conference + air_trans + mtg_rooms + beachfront + dist_to_reef + dist_to_access_points + city, data = data1)
+summary(city_lm)
+
+city_nob_lm <- lm(avg_price ~ coral_cover + rating + pool + conference + air_trans + beachfront + dist_to_reef + dist_to_access_points + city, data = data_noboca)
+summary(city_nob_lm)
+
+stripes_lm <- lm(avg_price ~ coral_cover + rating + pool + conference + air_trans + beachfront + dive_site + dist_to_reef + dist_to_access_points + near_shore + mid_shore, data = data1)
+summary(stripes_lm)
+
+compare <- stargazer(step, idea, city_lm, city_nob_lm, stripes_lm, type = "html",
+                         title = "Linear Models - 20km Distance",
+                         column.labels = c("Step Analysis", "Our Anlaysis", "With Cities", "W/O Boca", "With Shore Zones (200m)"),
+                         out = "compare20km.html")
 
 all_lm_lglg <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_dive) + log(dist_to_reef) + log(num_dive + sqrt(1 + num_dive^2)) + dive_site, data = data1)
 
