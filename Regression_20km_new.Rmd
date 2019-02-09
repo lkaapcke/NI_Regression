@@ -183,7 +183,59 @@ summary(width_nok)
 
 ```
 
+```{r}
+# Another stepwise regression:
+all_lm <- lm(avg_price ~ coral_cover + beach_width + rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + dive_site + num_dive + city + near_shore + mid_shore, data = data1)
 
+all_lm_low <- lm(low_price ~ coral_cover + beach_width + rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + dive_site + num_dive + city + near_shore + mid_shore, data = data1)
+
+all_step <- stepAIC(all_lm, direction = "both")
+all_step$anova
+
+all_lm_low <- stepAIC(all_lm_low, direction = "both")
+all_lm_low$anova
+
+lm_low <- lm(low_price ~ coral_cover + rating + num_reviews + pool + mtg_rooms + concierge + gym + breakfast + air_trans + beachfront + dist_to_airport + dist_to_dive + city, data = data1)
+summary(lm_low)
+
+lm_low_nob <- lm(avg_price ~ coral_cover + rating + num_reviews + pool + mtg_rooms + concierge + gym + breakfast + air_trans + beachfront + dist_to_airport + dist_to_dive + city, data = data1)
+summary(lm_low_nob)
+
+example <- stargazer(lm_low_nob, type = "html",
+                         title = "Linear Models - 20km Distance",
+                         column.labels = c("Step no Boca"),
+                         out = "compare20km.html")
+
+```
+
+```{r}
+
+# Log log step models:
+
+log_all <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + log(num_dive + sqrt(1 + num_dive^2)) + near_shore + mid_shore, data = data1)
+summary(log_all)
+
+log_all_step <- stepAIC(log_all, direction = "both")
+log_all_step$anova
+
+log_model <- lm(log(low_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + conference + mtg_rooms + concierge + gym + multilingual + breakfast + air_trans + beachfront + city, data = data1)
+
+example <- stargazer(log_model, type = "html",
+                         title = "Log Model - 20 km",
+                         column.labels = c("Log Model"),
+                         out = "example20km.html")
+names(data1)
+
+data_miami <- data1 %>% 
+  filter(city == "MiamiBeach")
+
+log_miami <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + dive_site + near_shore + mid_shore, data = data1)
+summary(log_miami)
+resid(log_miami)
+
+plot(resid(log_miami))
+
+```
 
 
 
