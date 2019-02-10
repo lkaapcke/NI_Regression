@@ -70,6 +70,44 @@ names(data1)[3] <- "num_reviews"
 
 ```
 
+```{r}
+
+data2 <- read_csv("regression_20km_new.csv")
+#View(data2)
+
+data2$Pool <- as.factor(data2$Pool)
+data2$Bar <- as.factor(data2$Bar)
+data2$Biz_Center <- as.factor(data2$Biz_Center)
+data2$Conference <- as.factor(data2$Conference)
+data2$Mtg_Rooms <- as.factor(data2$Mtg_Rooms)
+data2$Wifi <- as.factor(data2$Wifi)
+data2$Multilingual <- as.factor(data2$Multilingual)
+data2$No_Smoke <- as.factor(data2$No_Smoke)
+data2$Breakfast_ <- as.factor(data2$Breakfast_)
+data2$Air_Trans <- as.factor(data2$Air_Trans)
+data2$Free_Parking <- as.factor(data2$Free_Parking)
+data2$Beachfront <- as.factor(data2$Beachfront)
+data2$Wheelchair <- as.factor(data2$Wheelchair)
+data2$Concierge <- as.factor(data2$Concierge)
+data2$Laundry <- as.factor(data2$Laundry)
+data2$Gym <- as.factor(data2$Gym)
+data2$City <- as.factor(data2$City)
+data2$dive_site <- as.factor(data2$dive_site)
+data2$near_shore <- as.factor(data2$near_shore)
+data2$mid_shore <- as.factor(data2$mid_shore)
+data2$far_shore <- as.factor(data2$far_shore)
+
+data3 <- data2 %>%
+  dplyr::select(2, 4:41, -LATITUDE, -LONGITUDE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+names(data3)[5] <- "num_reviews"
+
+```
+
+
+
+
 ```{r results = "asis"}
 
 # Filter out Key West
@@ -237,6 +275,40 @@ plot(resid(log_miami))
 
 ```
 
+```{r}
+
+new_lm <- lm(avg_price ~ coral_cover + class + number_rooms + rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + near_dist_shore + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + city + dive_site + near_shore + mid_shore, data = data3)
+
+new_step <- stepAIC(new_lm, direction = "both")
+new_step$anova
+
+try_lm <- lm(avg_price ~ class + number_rooms + rating + num_reviews + conference + air_trans + beachfront + beach_width + dist_to_dive, data = data4)
+summary(try_lm)
+
+try_coral <- lm(avg_price ~ coral_cover + class + number_rooms + rating + num_reviews + conference + air_trans + beachfront + dist_to_reef + city, data = data4)
+summary(try_coral)
+
+coral <- stargazer(try_lm, try_coral, type = "html",
+                         title = "Linear Models - 20km Distance",
+                         column.labels = c("Step LM", "Coral LM"),
+                         out = "coral20km.html")
+
+data4 <- data3 %>% 
+  filter(city != "Boca")
+
+coral_pt <- ggplot(data4, aes(x = coral_cover, y = avg_price )) +
+  geom_point()
+coral_pt
+
+reef_box <- ggplot(data4, aes(x = city, y = coral_cover)) +
+  geom_boxplot()
+reef_box
+
+beach_lm <- lm(avg_price ~ beach_width + dist_to_reef + class + rating + city, data = data4)
+summary(beach_lm)
+
+
+```
 
 
 
