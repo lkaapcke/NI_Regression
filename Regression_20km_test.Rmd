@@ -1,0 +1,223 @@
+---
+title: "New 20km Regression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Packages
+library(tidyverse)
+library(knitr)
+library(readr)
+install.packages("stargazer")
+library(stargazer)
+install.packages("janitor")
+library(janitor)
+library(MASS)
+
+```
+
+```{r}
+# Data
+data <- read_csv("regression_20km_test.csv")
+
+
+# Correct data classes
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$City <- as.factor(data$City)
+#data$dive_site <- as.factor(data$dive_site)
+#data$near_shore <- as.factor(data$near_shore)
+#data$mid_shore <- as.factor(data$mid_shore)
+#data$far_shore <- as.factor(data$far_shore)
+#data$`3_star` <- as.factor(data$`3_star`)
+#data$`4_star` <- as.factor(data$`4_star`)
+#data$`5_star` <- as.factor(data$`5_star`)
+
+# Add a column with average price
+data1 <- data %>%
+  dplyr::select(2, 6:37, -LATITUDE, -LONGITUDE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+
+# Correct the rooms column to reviews
+names(data1)[3] <- "num_reviews"
+
+```
+
+```{r}
+
+# Exploratory data analysis
+
+reef_box <- ggplot(data1, aes(x = city, y = coral_cover)) +
+  geom_boxplot()
+reef_box
+
+price_box <- ggplot(data1, aes(x = city, y = avg_price)) +
+  geom_boxplot()
+price_box
+
+price_coral <- ggplot(data1, aes(x = coral_cover, y = avg_price)) +
+  geom_point(aes(color = city) )
+price_coral
+
+price_coral <- ggplot(data1, aes(x = log(coral_cover), y = log(avg_price))) +
+  geom_point(aes(color = city) )
+price_coral
+
+stats <- data1 %>% 
+  group_by(city) %>% 
+  summarize(
+    mean_price = mean(avg_price, na.rm = T),
+    mean_coral = mean(coral_cover, na.rm = T),
+    low_price = mean(low_price, na.rm = T, sort = desc),
+    count = length(city)
+  )
+stats
+
+```
+
+```{r}
+
+coral_lm <- lm(avg_price ~ coral_cover + num_reviews + rating + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + near_dist_shore + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + city, data = data1)
+summary(coral_lm)
+
+coral_step <- stepAIC(coral_lm, direction = "both")
+coral_step$anova
+
+coral_recommended <- lm(avg_price ~ coral_cover + rating + pool + conference + mtg_rooms + 
+    air_trans + beachfront + beach_width + city, data = data1)
+summary(coral_recommended)
+
+data_nob <- data1 %>% 
+  filter(city != "Boca")
+
+coral_lm2 <- lm(avg_price ~ coral_cover + num_reviews + rating + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + near_dist_shore + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + city, data = data_nob)
+summary(coral_lm2)
+
+
+plot(coral_lm2)
+
+data_nok <- data1 %>% 
+  filter(city != "KeyWest")
+
+coral_lm3 <- lm(avg_price ~ coral_cover + num_reviews + rating + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + near_dist_shore + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + city, data = data_nok)
+summary(coral_lm3)
+plot(coral_lm3)
+
+
+coral_step <- stepAIC(coral_lm3, direction = "both")
+coral_step$anova
+
+result_lm <- lm(avg_price ~ coral_cover + rating + pool + conference + air_trans + 
+    beachfront + dist_to_reef + city + mtg_rooms, data = data_nok)
+summary(result_lm)
+
+
+```
+
+```{r}
+
+data_new <- read_csv("regression_20km_test_edited.csv")
+
+
+# Correct data classes
+data_new$Pool <- as.factor(data_new$Pool)
+data_new$Bar <- as.factor(data_new$Bar)
+data_new$Biz_Center <- as.factor(data_new$Biz_Center)
+data_new$Conference <- as.factor(data_new$Conference)
+data_new$Mtg_Rooms <- as.factor(data_new$Mtg_Rooms)
+data_new$Wifi <- as.factor(data_new$Wifi)
+data_new$Multilingual <- as.factor(data_new$Multilingual)
+data_new$No_Smoke <- as.factor(data_new$No_Smoke)
+data_new$Breakfast_ <- as.factor(data_new$Breakfast_)
+data_new$Air_Trans <- as.factor(data_new$Air_Trans)
+data_new$Free_Parking <- as.factor(data_new$Free_Parking)
+data_new$Beachfront <- as.factor(data_new$Beachfront)
+data_new$Wheelchair <- as.factor(data_new$Wheelchair)
+data_new$Concierge <- as.factor(data_new$Concierge)
+data_new$Laundry <- as.factor(data_new$Laundry)
+data_new$Gym <- as.factor(data_new$Gym)
+data_new$City <- as.factor(data_new$City)
+data_new$dive_site <- as.factor(data_new$dive_site)
+#data_new$near_shore <- as.factor(data_new$near_shore)
+#data_new$mid_shore <- as.factor(data_new$mid_shore)
+#data_new$far_shore <- as.factor(data_new$far_shore)
+data_new$`3_star` <- as.factor(data_new$`3_star`)
+data_new$`4_star` <- as.factor(data_new$`4_star`)
+data_new$`5_star` <- as.factor(data_new$`5_star`)
+
+# Add a column with average price
+data2 <- data_new %>%
+  dplyr::select(2, 6:44, -LATITUDE, -LONGITUDE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+# Correct the rooms column to reviews
+names(data2)[3] <- "num_reviews"
+
+```
+
+```{r}
+# More regressions with data
+
+coral_lm3 <- lm(avg_price ~ coral_cover + num_reviews + rating + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + near_dist_shore + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + city + dive_site + class + number_rooms + x3_star + x4_star + x5_star, data = data2)
+summary(coral_lm3)
+
+coral_step <- stepAIC(coral_lm3, direction = "both")
+coral_step$anova
+
+new_lm <- lm(avg_price ~ coral_cover + num_reviews + rating + conference + air_trans + beachfront + near_dist_beach + beach_width + dist_to_access_points + dist_to_airport + dist_to_dive + num_dive + class + number_rooms + x4_star + x5_star + dive_site, data = data2)
+summary(new_lm)
+
+
+```
+
+```{r}
+# Let's try log log models
+
+log_data3 <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + log(num_dive + sqrt(1 + num_dive^2)) + dive_site + x3_star + x4_star + x5_star, data = data2)
+summary(log_data3)
+
+coral_log <- stepAIC(log_data3, direction = "both")
+coral_log$anova
+
+new_log <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + biz_center + conference + concierge + beachfront + log(dist_to_airport) + x3_star + x4_star + x5_star, data = data2)
+summary(new_log)
+
+more_log <- lm(log(avg_price) ~ log(coral_cover) + log(rating) + log(num_reviews) + biz_center + conference + concierge + beachfront + log(dist_to_airport) + log(dist_to_reef) + x3_star + x4_star + x5_star, data = data2)
+summary(more_log)
+
+more_log1 <- lm(log(low_price) ~ log(coral_cover) + log(rating) + log(num_reviews) + biz_center + conference + concierge + beachfront + log(dist_to_airport) + log(dist_to_reef) + x3_star + x4_star + x5_star, data = data2)
+summary(more_log1)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
