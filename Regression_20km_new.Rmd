@@ -16,11 +16,9 @@ library(knitr)
 library(readr)
 #install.packages("stargazer")
 library(stargazer)
-#install.packages("janitor")
+install.packages("janitor")
 library(janitor)
 library(MASS)
-#install.packages("leaps")
-library(leaps)
 
 ```
 
@@ -31,7 +29,7 @@ Our Research Questions:
 ```{r echo = F, message = F, include = F}
 
 # Import data
-data <- read_csv("regression_20km.csv")
+data <- read_csv("regression_20km_new.csv")
 #View(data)
 
 # Correct data classes
@@ -56,57 +54,20 @@ data$dive_site <- as.factor(data$dive_site)
 data$near_shore <- as.factor(data$near_shore)
 data$mid_shore <- as.factor(data$mid_shore)
 data$far_shore <- as.factor(data$far_shore)
+data$`3_star` <- as.factor(data$`3_star`)
+data$`4_star` <- as.factor(data$`4_star`)
+data$`5_star` <- as.factor(data$`5_star`)
 
 # Add a column with average price
 data1 <- data %>%
-  dplyr::select(2, 6:41, -LATITUDE, -LONGITUDE) %>% 
+  dplyr::select(2, 4:44, -LATITUDE, -LONGITUDE) %>% 
   mutate(avg_price = (Low_Price + High_Price)/2) %>% 
   clean_names()
 
 # Correct the rooms column to reviews
-names(data1)[3] <- "num_reviews"
-
-#View(data1)
+names(data1)[5] <- "num_reviews"
 
 ```
-
-```{r}
-
-data2 <- read_csv("regression_20km_new.csv")
-#View(data2)
-
-data2$Pool <- as.factor(data2$Pool)
-data2$Bar <- as.factor(data2$Bar)
-data2$Biz_Center <- as.factor(data2$Biz_Center)
-data2$Conference <- as.factor(data2$Conference)
-data2$Mtg_Rooms <- as.factor(data2$Mtg_Rooms)
-data2$Wifi <- as.factor(data2$Wifi)
-data2$Multilingual <- as.factor(data2$Multilingual)
-data2$No_Smoke <- as.factor(data2$No_Smoke)
-data2$Breakfast_ <- as.factor(data2$Breakfast_)
-data2$Air_Trans <- as.factor(data2$Air_Trans)
-data2$Free_Parking <- as.factor(data2$Free_Parking)
-data2$Beachfront <- as.factor(data2$Beachfront)
-data2$Wheelchair <- as.factor(data2$Wheelchair)
-data2$Concierge <- as.factor(data2$Concierge)
-data2$Laundry <- as.factor(data2$Laundry)
-data2$Gym <- as.factor(data2$Gym)
-data2$City <- as.factor(data2$City)
-data2$dive_site <- as.factor(data2$dive_site)
-data2$near_shore <- as.factor(data2$near_shore)
-data2$mid_shore <- as.factor(data2$mid_shore)
-data2$far_shore <- as.factor(data2$far_shore)
-
-data3 <- data2 %>%
-  dplyr::select(2, 4:41, -LATITUDE, -LONGITUDE) %>% 
-  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
-  clean_names()
-names(data3)[5] <- "num_reviews"
-
-```
-
-
-
 
 ```{r results = "asis"}
 
@@ -310,6 +271,49 @@ summary(beach_lm)
 
 ```
 
+```{r}
+# Try some log log regressions with the new data
+
+log_new <- lm(log(avg_price) ~ log(coral_cover) + x3_star + x4_star + x5_star + log(number_rooms) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + log(num_dive + sqrt(1 + num_dive^2)) + city, data = data1)
+
+log_new_nob <- lm(log(avg_price) ~ log(coral_cover) + x3_star + x4_star + x5_star + log(number_rooms) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + city, data = data_noboca)
+
+log_coral <- stargazer(log_new, log_new_nob, type = "html",
+                         title = "Log Models - 20km Distance",
+                         column.labels = c("All Cities", "W/o Boca"),
+                         out = "coral20km.html")
+
+log_step <- stepAIC(log_new, direction = "both")
+log_step$anova
+
+model_try <- lm(log(avg_price) ~ log(coral_cover) + x3_star + x4_star + x5_star + log(number_rooms) + pool + biz_center + conference + wheelchair + concierge + log(near_dist_beach) + log(dist_to_access_points) +  log(dist_to_airport) + log(num_dive + sqrt(1 + num_dive^2)) + city, data = data1)
+summary(model_try)
+
+reef_box <- ggplot(data1, aes(x = city, y = coral_cover)) +
+  geom_boxplot()
+reef_box
+
+price_box <- ggplot(data1, aes(x = city, y = avg_price)) +
+  geom_boxplot()
+price_box
+
+price_coral <- ggplot(data1, aes(x = coral_cover, y = avg_price)) +
+  geom_point(aes(color = city) )
+price_coral
+
+stats <- data1 %>% 
+  group_by(city) %>% 
+  summarize(
+    mean_price = mean(avg_price, na.rm = T, sort = desc),
+    mean_coral = mean(coral_cover, na.rm = T),
+    mean_class = mean(class),
+    mean_rating = mean(rating),
+    count = length(city)
+  )
+
+stats
+
+```
 
 
 
