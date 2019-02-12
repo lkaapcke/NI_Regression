@@ -16,7 +16,7 @@ library(knitr)
 library(readr)
 #install.packages("stargazer")
 library(stargazer)
-install.packages("janitor")
+#install.packages("janitor")
 library(janitor)
 library(MASS)
 

@@ -12,9 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
 library(readr)
-install.packages("stargazer")
+#install.packages("stargazer")
 library(stargazer)
-install.packages("janitor")
+#install.packages("janitor")
 library(janitor)
 library(MASS)
 
@@ -23,7 +23,6 @@ library(MASS)
 ```{r}
 # Data
 data <- read_csv("regression_20km_test.csv")
-
 
 # Correct data classes
 data$Pool <- as.factor(data$Pool)
@@ -53,7 +52,7 @@ data$City <- as.factor(data$City)
 
 # Add a column with average price
 data1 <- data %>%
-  dplyr::select(2, 6:37, -LATITUDE, -LONGITUDE) %>% 
+  dplyr::select(2, 6:44, -LATITUDE, -LONGITUDE) %>% 
   mutate(avg_price = (Low_Price + High_Price)/2) %>% 
   clean_names()
 
@@ -91,6 +90,8 @@ stats <- data1 %>%
     count = length(city)
   )
 stats
+
+
 
 ```
 
@@ -206,6 +207,8 @@ summary(more_log)
 
 more_log1 <- lm(log(low_price) ~ log(coral_cover) + log(rating) + log(num_reviews) + biz_center + conference + concierge + beachfront + log(dist_to_airport) + log(dist_to_reef) + x3_star + x4_star + x5_star, data = data2)
 summary(more_log1)
+
+
 
 ```
 
