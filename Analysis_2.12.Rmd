@@ -155,3 +155,44 @@ summary(beach)
 
 ```
 
+```{r}
+# Do some coral regressions
+
+plot_coral <- ggplot(data = data3, aes(x = coral_cover, y = avg_price)) +
+  geom_point() +
+  facet_wrap(~city_comp, scales = "free")
+plot_coral
+
+hist_coral <- ggplot(data = data3, aes(x = coral_cover)) +
+  geom_histogram() +
+  facet_wrap(~city_comp, scales = "free")
+hist_coral
+
+coral1 <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + city + log(rating) + log(class) + log(number_rooms) + conference + concierge + air_trans + beachfront + log(num_dive + sqrt(1 + num_dive^2)), data = data4)
+summary(coral1)
+
+coral_all <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef) + log(num_dive + sqrt(1 + num_dive^2)) + dive_site + x3_star + x4_star + x5_star + log(class) + log(number_rooms) , data = data4)
+summary(coral_all)
+coral_step <- stepAIC(coral_all, direction = "both")
+coral_step$anova
+
+# Recommended model: log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + biz_center + conference + concierge + air_trans + beachfront + log(dist_to_airport) +     x3_star + x5_star + log(class) + log(number_rooms)
+
+test <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + biz_center + conference + concierge + air_trans + beachfront + log(dist_to_airport) +     x3_star + x5_star + log(class) + log(number_rooms) + city_comp, data = data4)
+summary(test)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
