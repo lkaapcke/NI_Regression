@@ -1,0 +1,157 @@
+---
+title: "Analysis 2.12"
+author: "Lauren Kaapcke"
+date: "February 12, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+# Packages
+library(tidyverse)
+library(knitr)
+library(readr)
+#install.packages("stargazer")
+library(stargazer)
+#install.packages("janitor")
+library(janitor)
+library(MASS)
+
+```
+
+```{r}
+
+# Import and tidy data
+data <- read_csv("regression_20km_test.csv")
+
+# Reclassify columns
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$City <- as.factor(data$City)
+data$city_comp <- as.factor(data$city_comp)
+data$dive_site <- as.factor(data$dive_site)
+data$`3_star` <- as.factor(data$`3_star`)
+data$`4_star` <- as.factor(data$`4_star`)
+data$`5_star` <- as.factor(data$`5_star`)
+data$near <- as.factor(data$near)
+data$mid <- as.factor(data$mid)
+data$far <- as.factor(data$far)
+
+# Add a column with average price, select only wanted columns
+data1 <- data %>%
+  dplyr::select(2, 6:44, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+# Correct the rooms column to reviews
+names(data1)[3] <- "num_reviews"
+# n = 428 for data1
+
+# Filter out hotels that are missing class and review data
+data2 <- data1 %>% 
+  filter(class != "#N/A" | number_rooms != "#N/A")
+data2$class <- as.numeric(data2$class)
+data2$number_rooms <- as.numeric(data2$number_rooms)
+# n = 3385 for data2
+
+```
+
+```{r}
+
+# Summarize the data:
+stats1 <- data1 %>% 
+  group_by(city_comp) %>% 
+  summarize(
+    mean_price = mean(avg_price),
+    mean_coral = mean(coral_cover),
+    low_price = mean(low_price, sort = desc),
+    count = length(city)
+  )
+stats1
+
+stats2 <- data2 %>% 
+  group_by(city_comp) %>% 
+  summarize(
+    mean_price = mean(avg_price),
+    mean_coral = mean(coral_cover),
+    low_price = mean(low_price, sort = desc),
+    count = length(city)
+  )
+stats2
+
+overall_stats1 <- data2 %>% 
+  summarize(
+     mean_price = mean(avg_price),
+    mean_coral = mean(coral_cover),
+    low_price = mean(low_price, sort = desc),
+    mean_rooms = mean(number_rooms)
+  )
+overall_stats1
+
+# Decision to remove Boca and Delray from both data sets (sample sizes too small)
+data3 <- data1 %>% 
+  filter(city != "Boca" & city != "Delray")
+# n = 414 for data3
+
+data4 <- data2 %>% 
+  filter(city!= "Boca" & city != "Delray")
+# n = 372 for data4
+
+```
+
+```{r}
+
+# Focus on a beach width regression for data3, and then try data4
+# Way to transform vars: log(beach_width + sqrt(1 + beach_width^2))
+
+plot_width <- ggplot(data = data3, aes(x = beach_width, y = avg_price)) +
+  geom_point() +
+  facet_wrap(~city, scales = "free")
+plot_width
+
+hist_width <- ggplot(data = data3, aes(x = beach_width)) +
+  geom_histogram() +
+  facet_wrap(~city_comp, scales = "free")
+hist_width
+
+width2 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city, data = data3)
+summary(width2)
+
+width1 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city + pool + breakfast + beachfront + gym + free_parking + air_trans + log(dist_to_airport) + concierge + conference, data = data3)
+summary(width1)
+plot(width1)
+
+# Use a few versions of the regression below for the preso
+width3 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city + log(class) + pool + breakfast + beachfront + gym + free_parking + air_trans + log(dist_to_airport) + concierge + conference, data = data4)
+summary(width3)
+plot(width3)
+
+width_all <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + log(near_dist_beach) + log(dist_to_access_points) + log(dist_to_airport) + log(dist_to_reef), data = data2)
+summary(width_all)
+
+width_step <- stepAIC(width_all, direction = "both")
+width_step$anova
+# Suggested model: log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(num_reviews) + mtg_rooms + concierge + gym + breakfast + air_trans + free_parking + beachfront + log(dist_to_access_points) + log(dist_to_airport)
+
+beach <- lm(log(beach_width + sqrt(1 + beach_width^2)) ~ log(coral_cover) + log(dist_to_reef) + city, data = data4)
+summary(beach)
+
+```
+
