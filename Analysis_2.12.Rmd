@@ -153,6 +153,10 @@ width_step$anova
 beach <- lm(log(beach_width + sqrt(1 + beach_width^2)) ~ log(coral_cover) + log(dist_to_reef) + city, data = data4)
 summary(beach)
 
+avg_width <- mean(data4$beach_width)
+avg_price <- mean(data4$avg_price)
+avg_rooms <- mean(data4$number_rooms)
+
 ```
 
 ```{r}
