@@ -185,12 +185,33 @@ test <- lm(log(avg_price) ~ log(coral_cover) + log(rating) + log(num_reviews) + 
 summary(test)
 
 # Use the regression below for coral cover in the presentation
-test1 <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + log(rating) + log(near_dist_beach) + log(dist_to_access_points) + pool + gym + free_parking + conference + air_trans + position + beachfront + breakfast + log(class), data = data4)
+test1 <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + log(rating) + log(near_dist_beach) + log(dist_to_access_points) + pool + gym + free_parking + conference + air_trans + position + beachfront + breakfast + log(class) + log(dist_to_airport), data = data4)
 summary(test1)
 
 # width3 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city + log(class) + pool + breakfast + beachfront + gym + free_parking + air_trans + log(dist_to_airport) + concierge + conference, data = data4)
 ```
 
+```{r}
+
+# Models and stargazer table for presentation:
+
+coral_final <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + log(rating) + log(class) + air_trans + beachfront + breakfast + conference + free_parking + gym + pool + log(dist_to_access_points) + log(near_dist_beach) + position, data = data4)
+summary(coral_final)
+
+coral_1 <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + log(rating) + log(class), data = data4)
+summary(coral_1)      
+
+coral_reg <- stargazer(coral_1, coral_final, type = "html", report = "vc*", model.numbers = F, 
+                         title = "Ecotourism Log-Log Regression Results",
+                         dep.var.labels=c("Standard Hotel Room Price"),
+                         column.labels = c("Simple Model", "Chosen Model"),
+                         covariate.labels = c("Coral Cover", "Distance to Reef", "Guest Rating", "Hotel Class", "Airport Transport", "Beachfront", "Breakfast Included", "Conference Center", "Free Parking", "Gym", "Pool", "Distance to Beach Access", "Distance to Beach", "City Block 1", "City Block 2"),
+                         out = "coral_reg.html")
+                    
+                    
+
+
+```
 
 
 

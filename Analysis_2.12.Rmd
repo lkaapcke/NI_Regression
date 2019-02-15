@@ -187,6 +187,28 @@ summary(test)
 
 ```
 
+```{r}
+
+# Models and stargazer table for presentation
+
+width_final <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class) + air_trans + beachfront + breakfast + concierge + conference + free_parking + gym + pool + log(near_dist_beach) + log(dist_to_airport) + city, data = data4)
+summary(width_final)
+
+width_1 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class) + city, data = data4)
+summary(width_1)
+
+
+beach_reg <- stargazer(width_1, width_final, type = "html", report = "vc*", model.numbers = F, 
+                         title = "Beach Width Log-Log Regression Results",
+                         dep.var.labels=c("Standard Hotel Room Price"),
+                         column.labels = c("Simple Model", "Chosen Model"),
+                         covariate.labels = c("Beach Width", "Guest Rating", "Hotel Class", "Airport Transport", "Beachfront", "Breakfast Included", "Concierge", "Conference Center", "Free Parking", "Gym", "Pool", "Distance to Beach", "Distance to Airport", "Key West", "Miami Beach"),
+                         out = "beach_reg.html")
+
+
+
+
+```
 
 
 
