@@ -213,6 +213,12 @@ coral_reg <- stargazer(coral_1, coral_final, type = "html", report = "vc*", mode
 
 ```
 
+```{r}
+
+test <- lm(log(beach_width + sqrt(1 + beach_width^2)) ~ log(coral_cover) + log(dist_to_reef) + city, data = data4)
+summary(test)
+
+```
 
 
 
