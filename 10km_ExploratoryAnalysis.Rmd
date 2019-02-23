@@ -19,6 +19,8 @@ library(stargazer)
 install.packages("janitor")
 library(janitor)
 library(MASS)
+install.packages("Hmisc")
+library(Hmisc)
 ```
 
 ```{r}
@@ -75,24 +77,47 @@ summary(data1)
 
 # Filter for only continuous variables of interest
 data_cont1 <- data1 %>% 
-  dplyr::select(2,3, 20:29, 42)
-#View(data_cont1)
+  dplyr::select(2:3, 20:27, 29, 42)
+View(data_cont1)
 
 data_cont2 <- data2 %>% 
-  dplyr::select(2,3, 20:29, 33,34, 42)
-#View(data_cont2)
+  dplyr::select(2:3, 20:27, 29, 33:34, 42)
+View(data_cont2)
 
+# Look for correlation between numerical variables
 plot(data_cont1)
 plot(data_cont2)
 
+cor(data_cont1)
+cor(data_cont2)
 
-
+# Assess the significance of these correlations with Hmisc package
+rcorr(as.matrix(data_cont2), type="pearson")
+summary(data_cont2)
 
 ```
 
+Data 1 Analysis
+Correlation:
+- Rating has the highest correlations with low price (0.39), distance to airport (0.34), distance to dive sites (0.34) and avg price (0.31). Rating has a positive correlation with distance to beach (0.25), but negative with beach width (-0.25) --> this result is counterintuitive and indicates that hotels with wider beaches receive lower ratings. 
+- The number of reviews has the highest correlations with avg price (0.295), high price (0.28) and low price (0.26). This indicates that higher priced hotels are reviewed more often.
+- All prices are highly correlated which makes sense as low and high price are components of avg price (i.e. do not include these together in the regression)
+- Distance to beach is highly correlated with distance to access points (0.695), distance to airport (0.64), distance to dive site (0.64), coral cover (0.52) and distance to reef (0.48). Corrleation with distance to access points, dive site and reef is expected as distance to beach is similar or a component of these other metrics. 
+- Beach width is highly negatively correlated with distance to dive site (-0.71), distance to airport (-0.698), coral cover (-0.51) and distance to beach (-0.38). This indicates coral cover has a negative influence on beach width in our sample. 
+- Distance to airport is highly correlated with distance to dive (0.997) and coral cover (0.75). This indicates hotels that are far from airports are also far from the dive sites (possibly in more remote locations), but have a lot of coral within their buffer. --> Investigate this more
+- Coral cover is positively correlated with all prices and rating, which indicates hotels near greater amounts of coral cover are more expensive and better rated. 
 
-
-
+Data 2 Analysis
+Correlation:
+Correlations are similar, but now variables of class and number of rooms are included.
+- Rating is correlated with class (0.39). This indicates higher class hotels are rated higher, which makes sense. 
+- The number of reviews is highly correlated with the number of rooms (0.72) and hotel class (0.44). Hotels with more rooms are more likely to have ratings and higher ratings. Higher class hotels are likely to have more rooms. This indicates the presense of resort hotels.
+- Hotel class is highly correlated with all price metrics, which makes sense because higher class hotels cost more. 
+- Hotel class is slightly negatively correlated with coral cover (-0.09), indicating that higher class hotels are in areas of lower coral cover.
+- The number of rooms is negatively correlated with all distance metrics, indicating that hotels further from the beach/reef/airport have fewer rooms
+- Number of rooms is also negatively correlated with coral cover (-0.18), indicating that hotels have fewer rooms in areas of larger coral cover. --> investigate, why would this be the case?
+- Coral cover is shown to be significantly correlated with rating, low price, all distances, beach width and number of rooms
+- Beach width is shown to be significantly correlated with rating, low price, distance to beach/access points/dive sites and coral cover. 
 
 
 
