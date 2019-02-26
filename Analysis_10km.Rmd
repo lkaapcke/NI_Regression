@@ -15,9 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
 library(readr)
-install.packages("stargazer")
+#install.packages("stargazer")
 library(stargazer)
-install.packages("janitor")
+#install.packages("janitor")
 library(janitor)
 library(MASS)
 
@@ -142,7 +142,7 @@ summary(width1)
 plot(width1)
 
 # Use a few versions of the regression below for the preso
-width3 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city + log(class) + pool + breakfast + beachfront + gym + free_parking + air_trans + log(dist_to_airport) + concierge + conference, data = data4)
+width3 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city + log(class) + pool + breakfast + beachfront + gym + free_parking + air_trans + log(dist_to_airport) + concierge + conference + city, data = data4)
 summary(width3)
 plot(width3)
 
@@ -185,7 +185,7 @@ test <- lm(log(avg_price) ~ log(coral_cover) + log(rating) + log(num_reviews) + 
 summary(test)
 
 # Use the regression below for coral cover in the presentation
-test1 <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + log(rating) + log(near_dist_beach) + log(dist_to_access_points) + pool + gym + free_parking + conference + air_trans + position + beachfront + breakfast + log(class) + log(dist_to_airport), data = data4)
+test1 <- lm(log(avg_price) ~ log(coral_cover) + log(dist_to_reef) + log(rating) + log(near_dist_beach) + log(dist_to_access_points) + pool + gym + free_parking + conference + air_trans + position + beachfront + breakfast + log(class) + log(dist_to_airport) + city, data = data4)
 summary(test1)
 
 # width3 <- lm(log(avg_price) ~ log(beach_width + sqrt(1 + beach_width^2)) + log(near_dist_beach) + log(rating) + log(dist_to_access_points) +  city + log(class) + pool + breakfast + beachfront + gym + free_parking + air_trans + log(dist_to_airport) + concierge + conference, data = data4)
@@ -220,6 +220,61 @@ summary(test)
 
 ```
 
+```{r}
+
+#Try putting beach width and coral cover together in linear model
+reg_all <- lm(avg_price ~ coral_cover + beach_width + rating + num_reviews + pool + bar + biz_center + conference + mtg_rooms + wheelchair + concierge + laundry + gym + wifi + multilingual + no_smoke + breakfast + air_trans + free_parking + beachfront + near_dist_beach + dist_to_access_points + dist_to_airport + dist_to_dive + dist_to_reef + num_dive + city + city_comp + dive_site + class + number_rooms + x3_star + x4_star + x5_star + near + mid + far + position, data = data4)
+summary(reg_all)
+
+all_reg_step <- stepAIC(reg_all, direction = "both")
+all_reg_step$anova
+
+# Recommended model from stepwise regression: avg_price ~ rating + pool + bar + conference + air_trans + beachfront + num_dive + city_comp + class + x3_star + x5_star + far
+
+all_1 <- lm(avg_price ~ coral_cover + beach_width + rating + pool + bar + conference + air_trans + beachfront + num_dive + class + far, data = data4)
+summary(all_1)
+# Coral is negative, but not significant. Beach width is positive and significant.
+
+all_2 <- lm(avg_price ~ coral_cover + beach_width + rating + class, data = data4)
+summary(all_2)
+# Coral is positive and significant, beach width is positive but not significant
+
+all_log_linear <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class, data = data4)
+summary(all_log_linear)
+# Coral and beach width are both positive, coral is significant. Adjusted R^2 is higher than the log-log model with the same variables
+
+all_log_2 <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class), data = data4)
+summary(all_log_2)
+# Coral cover is significant and positive, beach width is negative and not significant. 
+
+log_ln_city <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + city, data = data4)
+summary(log_ln_city)
+
+data_mb <- data4 %>% 
+  filter(city == "MiamiBeach")
+
+data_kw <- data4 %>% 
+  filter(city == "KeyWest")
+
+data_fl <- data4 %>% 
+  filter(city == "FtLauderdale")
+
+log_ln_kw <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class, data = data_kw)
+summary(log_ln_kw)
+# coral negative, beach width positive, neither significant
+
+log_ln_fl <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class, data = data_fl)
+summary(log_ln_fl)
+# coral and beach width positive, neither significant
+
+log_ln_mb <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class, data = data_mb)
+summary(log_ln_mb)
+# coral negative, beach width positive and significant
+
+
+
+
+```
 
 
 
