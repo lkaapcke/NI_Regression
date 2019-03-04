@@ -269,15 +269,132 @@ summary(log_ln_fl)
 
 log_ln_mb <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class, data = data_mb)
 summary(log_ln_mb)
-# coral negative, beach width positive and significant
+# coral negative and not significant, beach width positive and significant
 
+```
 
+```{r}
+# try  with high and low price
 
+# LOW
+all_low <- lm(low_price ~ coral_cover + beach_width + rating + pool + bar + conference + air_trans + beachfront + num_dive + class + far, data = data4)
+summary(all_low)
+# beach width and coral cover both positive, neither significant
+
+all_low_log_linear <- lm(log(low_price) ~ coral_cover + beach_width + rating + class, data = data4)
+summary(all_low_log_linear)
+# coral cover positive and significant; beach width negative and significant
+
+all_low_log <- lm(log(low_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class), data = data4)
+summary(all_low_log)
+# coral cover positive and significant, beach width negative and significant
+
+# HIGH
+all_high <- lm(high_price ~ coral_cover + beach_width + rating + pool + bar + conference + air_trans + beachfront + num_dive + class + far, data = data4)
+summary(all_high)
+# coral cover negative but not significant; beach width positive and significant
+
+all_high_log <- lm(log(high_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class), data = data4)
+summary(all_high_log)
+#coral cover positive and significant, beach width positive but not significant
+
+all_high_log_linear <- lm(log(high_price) ~ coral_cover + beach_width + rating + class, data = data4)
+summary(all_high_log_linear)
+# BOTH coral cover and beach width are positive and significant!!! Adjusted R-squared = 0.51
+
+# add in more variables with high log-linear
+all_high_log_linear2 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms, data = data4)
+summary(all_high_log_linear2)
+# added number_rooms. still both positive and significant
+
+all_high_log_linear3 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position, data = data4)
+summary(all_high_log_linear3)
+# added position. still both positive and significant
+
+all_high_log_linear4 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool, data = data4)
+summary(all_high_log_linear4)
+# added pool. still both positive and significant
+
+all_high_log_linear5 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym, data = data4)
+summary(all_high_log_linear5)
+# added gym
+
+all_high_log_linear6 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking, data = data4)
+summary(all_high_log_linear6)
+# added free parking
+
+all_high_log_linear7 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking + concierge, data = data4)
+summary(all_high_log_linear7)
+# added concierge
+
+all_high_log_linear8 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking + concierge + conference, data = data4)
+summary(all_high_log_linear8)
+# added conference
+
+all_high_log_linear9 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking + concierge + conference + biz_center, data = data4)
+summary(all_high_log_linear9)
+# added biz center; adj. R^2 = 0.5242
+
+all_high_log_linear10 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking + concierge + conference + biz_center + air_trans, data = data4)
+summary(all_high_log_linear10)
+# added air trans; adj. R^2 = 0.5259
+
+all_high_log_linear11 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront, data = data4)
+summary(all_high_log_linear11)
+# added beachfront; adj. R^2 = 0.5292
+
+all_high_log_linear12 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast, data = data4)
+summary(all_high_log_linear12)
+# added breakfast; adj. R^2 = 0.5279
+
+all_high_log_linear13 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast, data = data4)
+summary(all_high_log_linear13)
+# added bar. Both positive and significant, Adj. R^2 = 0.5282
 
 ```
 
 
+```{r}
 
+# More high log-linear variables
+
+all_high_log_linear_more <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + num_dive, data = data4)
+summary(all_high_log_linear_more)
+# adding number of dive spots makes coral cover not significant (but positive). Beach width is positive and significant. R^2 = 0.559
+
+all_high_log_linear_more2 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef, data = data4)
+summary(all_high_log_linear_more2)
+# added distance to reef. both positive and significant! R^2 = 0.529
+
+all_high_log_linear_more3 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + dist_to_dive, data = data4)
+summary(all_high_log_linear_more3)
+# adding dist to dive makes coral cover negative and not significant. R^2 = 0.5633
+
+all_high_log_linear_more4 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + dist_to_airport, data = data4)
+summary(all_high_log_linear_more4)
+# adding dist to airport makes coral negative and not significant. R^2 = 0.5668
+
+all_high_log_linear_more5 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + dist_to_access_points, data = data4)
+summary(all_high_log_linear_more5)
+# both positive and significant after adding dist to access points. R^2 = 0.5326
+
+all_high_log_linear_more6 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + dist_to_access_points, data = data4)
+summary(all_high_log_linear_more6)
+# added wheelchair
+
+all_high_log_linear_more7 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + dist_to_access_points, data = data4)
+summary(all_high_log_linear_more7)
+# added laundry
+
+all_high_log_linear_more8 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + dist_to_access_points, data = data4)
+summary(all_high_log_linear_more8)
+# added no smoke
+
+all_high_log_linear_more9 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data4)
+summary(all_high_log_linear_more9)
+# added meeting rooms
+
+```
 
 
 
