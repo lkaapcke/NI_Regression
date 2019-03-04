@@ -392,7 +392,16 @@ summary(all_high_log_linear_more8)
 
 all_high_log_linear_more9 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data4)
 summary(all_high_log_linear_more9)
+
+all_high_log_linear_more_city <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points + city, data = data4)
+summary(all_high_log_linear_more_city)
 # added meeting rooms
+
+results <- stargazer(all_high_log_linear_more9, all_high_log_linear_more_city, type = "html", report = "vc*", model.numbers = F, title = "Log-Linear Regression Results",
+                         dep.var.labels=c("Standard Hotel Room Price"),
+                         column.labels = c("Without City", "With City"),
+                         covariate.labels = c("Coral Cover", "Beach Width", "Rating", "Class", "Number of Rooms", "Position Mid","Position Near", "Pool", "Bar", "Gym","Free Parking","Concierge","Conference","Business Center","Air Transport","Beachfront","Breakfast","Distance to Reef", "Wheelchair", "Laundry", "Non Smoking", "Meeting Rooms","Distance to Access", "Key West", "Miami Beach"),
+                         out = "model_reg.html")
 
 ```
 
