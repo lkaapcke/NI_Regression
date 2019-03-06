@@ -55,10 +55,11 @@ data$near <- as.factor(data$near)
 data$mid <- as.factor(data$mid)
 data$far <- as.factor(data$far)
 data$position <- as.factor(data$position)
+data$zip <- as.factor(data$zip)
 
 # Add a column with average price, select only wanted columns
 data1 <- data %>%
-  dplyr::select(2, 6:48, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
+  dplyr::select(2, 6:49, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
   mutate(avg_price = (Low_Price + High_Price)/2) %>% 
   clean_names()
 # Correct the rooms column to reviews
@@ -78,12 +79,12 @@ data2$number_rooms <- as.numeric(data2$number_rooms)
 
 # Summarize the data:
 stats1 <- data1 %>% 
-  group_by(city_comp) %>% 
+  group_by(zip) %>% 
   summarize(
     mean_price = mean(avg_price),
     mean_coral = mean(coral_cover),
     low_price = mean(low_price, sort = desc),
-    count = length(city)
+    count = length(zip)
   )
 stats1
 
@@ -405,6 +406,82 @@ results <- stargazer(all_high_log_linear_more9, all_high_log_linear_more_city, t
 
 ```
 
+```{r}
+
+# Running regressions on zip code instead of city
+
+stats_zip <- data4 %>% 
+  group_by(zip) %>% 
+  summarize(
+    mean_price = mean(avg_price),
+    mean_coral = mean(coral_cover),
+    low_price = mean(low_price, sort = desc),
+    mean_rooms = mean(number_rooms),
+    count = length(zip),
+    mean_beach = mean(beach_width)
+  )
+stats_zip
+
+# Try running log-linear with zip
+all_high_log_linear_zip <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points + zip, data = data4)
+summary(all_high_log_linear_zip)
+# Reference zip is 33040 Coral cover is still negative overall, let's separate to find which zips have negative relationship with coral cover:
+
+data_33040 <- data4 %>%
+  filter(zip == "33040")
+
+data_33139 <- data4 %>%
+  filter(zip == "33139")
+
+data_33140 <- data4 %>%
+  filter(zip == "33140")
+
+data_33141 <- data4 %>% 
+  filter(zip == "33141")
+
+data_33304 <- data4 %>%
+  filter(zip == "33304")
+
+data_33305 <- data4 %>%
+  filter(zip == "33305")
+
+data_33308 <- data4 %>% 
+  filter(zip == "33308")
+
+data_33316 <- data4 %>% 
+  filter(zip == "33316")
+
+# Re-run regression on each zip:
+high_lgln_33040 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data_33040)
+summary(high_lgln_33040)
+# Coral is negative, not significant
+
+high_lgln_33139 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data_33139)
+summary(high_lgln_33139)
+# Coral is negative, not significant
+
+high_lgln_33140 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data_33140)
+summary(high_lgln_33140)
+# Coral is positive, not significant
+
+high_lgln_33141 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data_33141)
+summary(high_lgln_33141)
+# Coral is negative, not significant
+
+high_lgln_33304 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + pool + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data_33304)
+summary(high_lgln_33304)
+# Coral cover is positive, not significant
+
+high_lgln_33308 <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points, data = data_33308)
+summary(high_lgln_33308)
+# Coral cover is negative and not significant
+# Had to remove pool because n = 11 and all hotels had pools
+
+# Did not run regressions for 33305 or 33316 because n = 3 and n = 7 respectively.
+# Coral has a positive impact in 33304 (Ft. Lauderdale) and 33140 (Miami Beach). Coral has a negative impact in 33040 (Key west), 33308 (Ft. Lauderdale, however n = 11), 333139 (South Beach), 33141 (Miami Beach).
+
+
+```
 
 
 
