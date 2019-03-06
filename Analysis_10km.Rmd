@@ -59,7 +59,7 @@ data$zip <- as.factor(data$zip)
 
 # Add a column with average price, select only wanted columns
 data1 <- data %>%
-  dplyr::select(2, 6:49, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
+  dplyr::select(2, 6:50, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
   mutate(avg_price = (Low_Price + High_Price)/2) %>% 
   clean_names()
 # Correct the rooms column to reviews
@@ -483,6 +483,33 @@ summary(high_lgln_33308)
 
 ```
 
+```{r}
+# Try running regressions including crime data as a numeric variable
+
+lgln_crime <- lm(log(high_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points + crime, data = data4)
+summary(lgln_crime)
+
+avg_lgln_crime <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points + crime, data = data4)
+summary(avg_lgln_crime)
+# Both beach width and coral cover are positive and significant. 
+
+avg_lgln_crime_city <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points + crime + city, data = data4)
+summary(avg_lgln_crime_city)
+# Coral is negative and not significant, beach width is positive and significant.
+
+#Check if crime is correlated with anything
+data_cont <- data4 %>%
+  dplyr::select(2:3, 22:29, 33:34, 43:44)
+
+plot(data_cont)
+cor(data_cont)
+# Crime is negatively correlated with beach width. Places with higher crime are expected to have narrower beaches. Not a high correlation -0.38.
+
+avg_lgln_crime_int <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + number_rooms + position + bar + gym + free_parking + concierge + conference + biz_center + air_trans + beachfront + breakfast + dist_to_reef + wheelchair + laundry + no_smoke + mtg_rooms + dist_to_access_points + crime + city + coral_cover*city, data = data4)
+summary(avg_lgln_crime_int)
+# Coral alone is positive, but not significant. Coral interaction terms with Key West and MB are negative, but not significant. Interpretation: a person's WTP for a hotel depends on the amount of coral cover AND the city. This is lower in MB & KW. A person's willingess to pay for a hotel with more coral depends on what city it is in. 
+
+```
 
 
 
