@@ -587,16 +587,37 @@ asorted[1:10, ]
 
 r_linear <- lmRob(avg_price ~ coral_cover + beach_width + rating + class + zip, data = data4)
 summary(r_linear)
+summary(linear)
+# Coral negative in both, less negative in linear model
 
 r_lgln <- lmRob(log(avg_price) ~ coral_cover + beach_width + rating + class + zip, data = data4)
 summary(r_lgln)
 summary(lgln)
+# Robust model is less negative than normal model, p-value is also more significant
 
 r_lglg <- lmRob(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class) + zip, data = data4)
 summary(r_lglg)
 summary(lglg)
+# Normal model has more negative value for coral, but is less significant
 
-# + beach_width + rating + class + zip
+# What happens if we remove outliers 101, 102, 104, 105, 170, 294, 297, 357?
+data4$hotel_name[101]
+data4$hotel_name[102]
+
+
+data_clean <- data4 %>%
+  filter(hotel_name != data4$hotel_name[101]) %>% 
+  filter(hotel_name != data4$hotel_name[102]) %>% 
+  filter(hotel_name != data4$hotel_name[104]) %>%
+  filter(hotel_name != data4$hotel_name[105]) %>%
+  filter(hotel_name != data4$hotel_name[170]) %>%
+  filter(hotel_name != data4$hotel_name[294]) %>%
+  filter(hotel_name != data4$hotel_name[297]) %>%
+  filter(hotel_name != data4$hotel_name[357])
+
+c_linear <- lm(avg_price ~ coral_cover + beach_width + rating + class + zip, data = data4)
+summary(c_linear)
+# Even without outliers, coral is still negative
 
 ```
 
