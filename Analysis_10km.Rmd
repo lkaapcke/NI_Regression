@@ -20,6 +20,8 @@ library(stargazer)
 #install.packages("janitor")
 library(janitor)
 library(MASS)
+#install.packages(robust)
+library(robust)
 
 ```
 
@@ -100,7 +102,7 @@ stats2 <- data2 %>%
   )
 stats2
 
-overall_stats1 <- data2 %>% 
+overall_stats1 <- data4 %>% 
   summarize(
      mean_price = mean(avg_price),
     mean_coral1 = mean(coral_cover)*0.01,
@@ -511,6 +513,92 @@ summary(avg_lgln_crime_int)
 
 ```
 
+```{r}
+
+# Try running some robust linear models, perhaps this will smooth the effects of outliers, etc. in the data.
+
+# First compare linear and log linear models & residuals to ensure log linear is the better fit
+
+linear <- lm(avg_price ~ coral_cover + beach_width + rating + class + zip, data = data4)
+summary(linear)
+
+lgln <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + zip, data = data4)
+summary(lgln)
+
+lglg <- lm(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class) + zip, data = data4)
+summary(lglg)
+
+# Now compare residuals
+par(mfrow = c(2,2))
+plot(linear)
+
+par(mfrow = c(2,2))
+plot(lgln)
+
+par(mfrow = c(2,2))
+plot(lglg)
+
+# Look at problematic observations 101, 102, 104, 105, 170, 294, 297, 357
+
+data4[c(101, 102, 104, 105, 170, 294, 297, 357), 1:44]
+
+# 5 of these hotels are in South Beach, 2 in Miami Beach and 1 in Fort Lauderdale. 6 of them have average prices above $1000 and 8 of them have average prices far above the entire sample. The question is: do these observations have a lot of leverage to alter regression results?
+
+# Look at observations with large Cook's Distances:
+
+cooks <- cooks.distance(linear)
+r <- stdres(linear)
+a <- cbind(data4, cooks, r)
+a[cooks > 4/372, ]
+# 14 observations have a larger than expected Cook's distance
+
+cookslgln <- cooks.distance(lgln)
+rlgln <- stdres(lgln)
+a <- cbind(data4, cookslgln, rlgln)
+a[cookslgln > 4/372, ]
+# 46 observations have a larger than expected Cook's distance
+
+cookslglg <- cooks.distance(lglg)
+rlglg <- stdres(lglg)
+a <- cbind(data4, cookslglg, rlglg)
+a[cookslglg > 4/372, ]
+# 22 observations have a larger than expected Cook's distance
+
+# Look at absolute residuals:
+rabs <- abs(r)
+a <- cbind(data4, cooks, r, rabs)
+asorted <- a[order(-rabs), ]
+asorted[1:10, ]
+# This has the highest absolute residuals
+
+rabslgln <- abs(rlgln)
+a <- cbind(data4, cookslgln, rlgln, rabslgln)
+asorted <- a[order(-rabslgln), ]
+asorted[1:10, ]
+# This has the lowest absolute residuals
+
+rabslglg <- abs(rlglg)
+a <- cbind(data4, cookslglg, rlglg, rabslglg)
+asorted <- a[order(-rabslglg), ]
+asorted[1:10, ]
+# These residuals are between the two other models
+
+# Try running robus models
+
+r_linear <- lmRob(avg_price ~ coral_cover + beach_width + rating + class + zip, data = data4)
+summary(r_linear)
+
+r_lgln <- lmRob(log(avg_price) ~ coral_cover + beach_width + rating + class + zip, data = data4)
+summary(r_lgln)
+summary(lgln)
+
+r_lglg <- lmRob(log(avg_price) ~ log(coral_cover) + log(beach_width + sqrt(1 + beach_width^2)) + log(rating) + log(class) + zip, data = data4)
+summary(r_lglg)
+summary(lglg)
+
+# + beach_width + rating + class + zip
+
+```
 
 
 
