@@ -22,6 +22,7 @@ library(janitor)
 library(MASS)
 #install.packages(robust)
 library(robust)
+library(xtable)
 
 ```
 
@@ -81,12 +82,12 @@ data2$number_rooms <- as.numeric(data2$number_rooms)
 
 # Summarize the data:
 stats1 <- data1 %>% 
-  group_by(zip) %>% 
+  group_by(city) %>% 
   summarize(
     mean_price = mean(avg_price),
     mean_coral = mean(coral_cover),
     low_price = mean(low_price, sort = desc),
-    count = length(zip)
+    count = length(city)
   )
 stats1
 
@@ -621,6 +622,35 @@ summary(c_linear)
 
 ```
 
+```{r, results = "asis"}
+
+# Models to show the team in SC
+cities <- data4 %>% 
+  group_by(city) %>% 
+  summarize(
+    mean_price = mean(avg_price),
+    mean_coral = mean(coral_cover),
+    mean_reefdist = mean(dist_to_reef),
+    mean_rating = mean(rating),
+    mean_class = mean(class),
+    count = length(city)
+  )
+cities
+
+# Regression models
+
+simple <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class, data = data4)
+summary(simple)
+
+simple_2 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points, data = data4)
+summary(simple_2)
+
+simple_3 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + laundry + gym + wifi + breakfast + air_trans + free_parking, data = data4)
+summary(simple_3)
+
+
+
+```
 
 
 
