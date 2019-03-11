@@ -645,8 +645,20 @@ summary(simple)
 simple_2 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points, data = data4)
 summary(simple_2)
 
-simple_3 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + laundry + gym + wifi + breakfast + air_trans + free_parking, data = data4)
+simple_3 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking, data = data4)
 summary(simple_3)
+
+simple_city <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking + city, data = data4)
+summary(simple_city)
+
+benefits_reg <- stargazer(simple, simple_3, simple_city, type = "html", report = "vc*", model.numbers = F, digits = 9, digits.extra = 1, 
+                         title = "Ecotourism Log-Linear Regression Results",
+                         dep.var.labels=c("Standard Hotel Room Price"),
+                         column.labels = c("Simple", "Model 2", "Model w/ City"),
+                         covariate.labels = c("Coral Cover", "Beach Width", "Rating", "Class", "Distance to Reef", "Distance to Access Pts.", "Beachfront", "Pool", "Conference", "Concierge", "Gym", "Wifi", "Breakfast", "Air Transport", "Free Parking", "Key West", "Miami Beach"),
+                         out = "benefits_reg.html")
+
+# coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking + city
 
 
 
