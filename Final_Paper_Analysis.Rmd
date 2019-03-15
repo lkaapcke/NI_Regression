@@ -20,6 +20,7 @@ library(janitor)
 library(MASS)
 #install.packages(robust)
 #library(robust)
+#install.packages(car)
 library(car)
 
 ```
@@ -90,6 +91,8 @@ data_summary <- data4 %>%
 data_summary <- as.data.frame(data_summary)
 
 stargazer(data_summary, type = "html", omit.summary.stat = c("p25", "p75"), nobs = F, digits = 1, out = "summary.html")
+
+write.csv(data_summary, file = "data_summary.csv")
 
 
 ```
