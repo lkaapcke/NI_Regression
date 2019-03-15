@@ -1,0 +1,111 @@
+---
+title: "Final Paper Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+# Packages
+library(tidyverse)
+library(knitr)
+library(readr)
+#install.packages("stargazer")
+library(stargazer)
+#install.packages("janitor")
+library(janitor)
+library(MASS)
+#install.packages(robust)
+#library(robust)
+library(car)
+
+```
+
+```{r}
+
+# Import and tidy data
+data <- read_csv("regression_10km.csv")
+
+# Reclassify columns
+data$Pool <- as.factor(data$Pool)
+data$Bar <- as.factor(data$Bar)
+data$Biz_Center <- as.factor(data$Biz_Center)
+data$Conference <- as.factor(data$Conference)
+data$Mtg_Rooms <- as.factor(data$Mtg_Rooms)
+data$Wheelchair <- as.factor(data$Wheelchair)
+data$Concierge <- as.factor(data$Concierge)
+data$Laundry <- as.factor(data$Laundry)
+data$Gym <- as.factor(data$Gym)
+data$Wifi <- as.factor(data$Wifi)
+data$Multilingual <- as.factor(data$Multilingual)
+data$No_Smoke <- as.factor(data$No_Smoke)
+data$Breakfast_ <- as.factor(data$Breakfast_)
+data$Air_Trans <- as.factor(data$Air_Trans)
+data$Free_Parking <- as.factor(data$Free_Parking)
+data$Beachfront <- as.factor(data$Beachfront)
+data$City <- as.factor(data$City)
+data$city_comp <- as.factor(data$city_comp)
+data$dive_site <- as.factor(data$dive_site)
+data$`3_star` <- as.factor(data$`3_star`)
+data$`4_star` <- as.factor(data$`4_star`)
+data$`5_star` <- as.factor(data$`5_star`)
+data$near <- as.factor(data$near)
+data$mid <- as.factor(data$mid)
+data$far <- as.factor(data$far)
+data$position <- as.factor(data$position)
+data$zip <- as.factor(data$zip)
+
+# Add a column with average price, select only wanted columns
+data1 <- data %>%
+  dplyr::select(2, 6:50, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
+  mutate(avg_price = (Low_Price + High_Price)/2) %>% 
+  clean_names()
+# Correct the rooms column to reviews
+names(data1)[3] <- "num_reviews"
+# n = 428 for data1
+
+# Filter out hotels that are missing class and review data
+data2 <- data1 %>% 
+  filter(class != "#N/A" | number_rooms != "#N/A")
+data2$class <- as.numeric(data2$class)
+data2$number_rooms <- as.numeric(data2$number_rooms)
+# n = 385 for data2
+
+data4 <- data2 %>% 
+  filter(city!= "Boca" & city != "Delray")
+# n = 372 for data4
+
+```
+
+```{r results = "asis"}
+
+# Create a df with summary of variables
+
+data_summary <- data4 %>% 
+  dplyr::select(avg_price, coral_cover, dist_to_reef, dive_site, beach_width, near_dist_beach, dist_to_access_points, class, rating, num_reviews, number_rooms, air_trans, bar, beachfront, biz_center, breakfast, concierge, conference, free_parking, gym, laundry, mtg_rooms, multilingual, no_smoke, wheelchair, wifi, dist_to_airport)
+
+data_summary <- as.data.frame(data_summary)
+
+stargazer(data_summary, type = "html", omit.summary.stat = c("p25", "p75"), nobs = F, digits = 1, out = "summary.html")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

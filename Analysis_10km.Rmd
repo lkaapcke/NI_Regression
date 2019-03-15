@@ -21,8 +21,8 @@ library(stargazer)
 library(janitor)
 library(MASS)
 #install.packages(robust)
-library(robust)
-library(xtable)
+#library(robust)
+library(car)
 
 ```
 
@@ -679,6 +679,45 @@ benefits_city <- stargazer(simple_fl, simple_kw, simple_mb, type = "html", repor
 
 
 ```
+
+```{r}
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
