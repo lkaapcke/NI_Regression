@@ -91,12 +91,11 @@ stats1 <- data1 %>%
   )
 stats1
 
-stats2 <- data2 %>% 
+stats2 <- data4 %>% 
   group_by(city) %>% 
   summarize(
     mean_price = mean(avg_price),
     mean_coral = mean(coral_cover),
-    low_price = mean(low_price, sort = desc),
     mean_rooms = mean(number_rooms),
     count = length(city),
     mean_beach = mean(beach_width)
@@ -680,13 +679,7 @@ benefits_city <- stargazer(simple_fl, simple_kw, simple_mb, type = "html", repor
 
 ```
 
-```{r}
 
-
-
-
-
-```
 
 
 
