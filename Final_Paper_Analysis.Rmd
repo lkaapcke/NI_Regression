@@ -18,6 +18,7 @@ library(stargazer)
 #install.packages("janitor")
 library(janitor)
 library(MASS)
+library(car)
 
 ```
 
@@ -258,11 +259,11 @@ report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb, type 
 
 #######################################################
 
-compare <- stargazer(model, model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17, model18, model19, model20, type = "html", report = "vc*", model.numbers = F, digits = 9, 
-                         title = "Ecotourism Log-Linear Regression Results by City",
-                         dep.var.labels=c("Log of Standard Hotel Room Price"),
-                         column.labels = c("Model", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"),
-                         out = "compare.html")
+#compare <- stargazer(model, model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17, model18, model19, model20, type = "html", report = "vc*", model.numbers = F, digits = 9, 
+                        # title = "Ecotourism Log-Linear Regression Results by City",
+                        # dep.var.labels=c("Log of Standard Hotel Room Price"),
+                        # column.labels = c("Model", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"),
+                        # out = "compare.html")
 
 all <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + beach_width + dist_to_access_points + dive_site + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual + no_smoke + wheelchair + wifi + dist_to_airport, data = data4)
 summary(all)
@@ -274,6 +275,108 @@ summary(all_city)
 
 ```
 
+```{r}
+
+# Create new columns that put coral cover into km^2 and distance to airport into km
+data5 <- data4 %>% 
+  mutate(coral_km2 = coral_cover/1000000) %>% 
+  mutate(airport_km = dist_to_airport/1000)
+
+# Summarize with new metrics
+cities <- data5 %>% 
+  group_by(city) %>% 
+  summarize(
+    mean_price = mean(avg_price),
+    sd_price = sd(avg_price),
+    min_price = min(avg_price),
+    max_price = max(avg_price),
+    mean_coral = mean(coral_km2),
+    sd_coral = sd(coral_km2),
+    min_coral = min(coral_km2),
+    max_coral = max(coral_km2),
+    mean_beach = mean(beach_width),
+    sd_beach = sd(beach_width),
+    min_beach = min(beach_width),
+    max_beach = max(beach_width),
+    mean_rooms = mean(number_rooms),
+    sd_rooms = sd(number_rooms),
+    min_rooms = min(number_rooms),
+    max_rooms = max(number_rooms),
+    count = length(city)
+  )
+cities
+
+# Re-run pooled models with adjusted metrics
+
+model_1 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating, data = data5)
+summary(model_1)
+mean(vif(model_1))
+
+model21 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points, data = data5)
+summary(model21)
+mean(vif(model21))
+
+model22 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data5)
+summary(model22)
+vif(model22)
+mean(vif(model22))
+
+report <- stargazer(model_1, model21, model22, 
+                    type = "html", 
+                    model.numbers = F, 
+                    digits = 4, 
+                    title = "Ecotourism Log-Linear Pooled Regression Results",  
+                    omit.stat = c("rsq"), 
+                    dep.var.labels = c("Log of Standard Hotel Room Price"),
+                    covariate.labels = c("<p>Coral Cover (km<sup>2</sup>)</p>", "Beach Width (m)", "Hotel Class", "Guest Rating", "Distance to Reef (m)", "Distance to Access (m)", "# Rooms", "Beachfront", "Conference Center"),
+                    column.labels = c("1", "2", "3"),
+                    out = "report_km2.html")
+
+# Re-run city and local models with adjusted metrics
+
+model22_city <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference + city, data = data5)
+summary(model22_city)
+mean(vif(model22_city))
+vif(model22_city)
+
+data_mb <- data5 %>% 
+  filter(city == "MiamiBeach")
+
+data_kw <- data5 %>% 
+  filter(city == "KeyWest")
+
+data_fl <- data5 %>% 
+  filter(city == "FtLauderdale")
+
+model22_fl <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_fl)
+summary(model22_fl)
+mean(vif(model22_fl))
+vif(model22_fl)
+
+model22_kw <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_kw)
+summary(model22_kw)
+mean(vif(model22_kw))
+vif(model22_kw)
+
+model22_mb <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_mb)
+summary(model22_mb)
+mean(vif(model22_mb))
+vif(model22_mb)
+
+report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb, 
+                         type = "html", 
+                         model.numbers = F, 
+                         digits = 4, 
+                         title = "Ecotourism Log-Linear Local Regression Results",
+                         dep.var.labels = c("Log of Standard Hotel Room Price"), 
+                         omit.stat = c("rsq"),
+                         covariate.labels = c("<p>Coral Cover (km<sup>2</sup>)</p>", "Beach Width (m)", "Hotel Class", "Guest Rating", "Distance to Reef (m)", "Distance to Access (m)", "# Rooms", "Beachfront", "Conference Center", "Key West", "Miami Beach"),
+                         column.labels = c("3 + City", "Fort Lauderdale", "Key West", "Miami Beach"),
+                         out = "report_city_km2.html")
+
+  
+
+```
 
 
 
