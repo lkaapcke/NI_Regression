@@ -311,15 +311,18 @@ cities
 model_1 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating, data = data5)
 summary(model_1)
 mean(vif(model_1))
+AIC(model_1)
 
 model21 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points, data = data5)
 summary(model21)
 mean(vif(model21))
+AIC(model21)
 
 model22 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data5)
 summary(model22)
 vif(model22)
 mean(vif(model22))
+AIC(model22)
 
 report <- stargazer(model_1, model21, model22, 
                     type = "html", 
@@ -374,7 +377,17 @@ report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb,
                          column.labels = c("3 + City", "Fort Lauderdale", "Key West", "Miami Beach"),
                          out = "report_city_km2.html")
 
-  
+var(data5$coral_km2)
+var(data5$beach_width)
+
+var(data_fl$coral_km2)
+var(data_kw$coral_km2)
+var(data_mb$coral_km2)
+
+var(data_fl$beach_width)
+var(data_kw$beach_width)
+var(data_mb$beach_width)
+
 
 ```
 
