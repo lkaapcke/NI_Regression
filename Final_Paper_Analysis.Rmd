@@ -341,6 +341,7 @@ model22_city <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + d
 summary(model22_city)
 mean(vif(model22_city))
 vif(model22_city)
+AIC(model22_city)
 
 data_mb <- data5 %>% 
   filter(city == "MiamiBeach")
@@ -355,16 +356,19 @@ model22_fl <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dis
 summary(model22_fl)
 mean(vif(model22_fl))
 vif(model22_fl)
+AIC(model22_fl)
 
 model22_kw <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_kw)
 summary(model22_kw)
 mean(vif(model22_kw))
 vif(model22_kw)
+AIC(model22_kw)
 
 model22_mb <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_mb)
 summary(model22_mb)
 mean(vif(model22_mb))
 vif(model22_mb)
+AIC(model22_mb)
 
 report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb, 
                          type = "html", 
