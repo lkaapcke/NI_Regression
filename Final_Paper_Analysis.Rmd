@@ -1,5 +1,5 @@
 ---
-title: "Final Paper Analysis"
+title: "Naturally Insured Final Paper Analysis"
 output: html_document
 ---
 
@@ -7,15 +7,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This script was used for statistical analysis as part of the 2019-19 Bren School Master's Thesis Project Naturally Insured.
+
 ```{r}
 
 # Packages
 library(tidyverse)
 library(knitr)
 library(readr)
-#install.packages("stargazer")
+install.packages("stargazer")
 library(stargazer)
-#install.packages("janitor")
+install.packages("janitor")
 library(janitor)
 library(MASS)
 library(car)
@@ -56,7 +58,7 @@ data$far <- as.factor(data$far)
 data$position <- as.factor(data$position)
 data$zip <- as.factor(data$zip)
 
-# Add a column with average price, select only wanted columns
+# Add a column with average price, select only needed columns
 data1 <- data %>%
   dplyr::select(2, 6:50, -LATITUDE, -LONGITUDE, -NEAR_DIST_SHORE) %>% 
   mutate(avg_price = (Low_Price + High_Price)/2) %>% 
@@ -72,6 +74,7 @@ data2$class <- as.numeric(data2$class)
 data2$number_rooms <- as.numeric(data2$number_rooms)
 # n = 385 for data2
 
+# Filter out Boca Raton and Delray Beach due to low sample size
 data4 <- data2 %>% 
   filter(city!= "Boca" & city != "Delray")
 # n = 372 for data4
@@ -86,192 +89,6 @@ data_summary <- data4 %>%
   dplyr::select(avg_price, coral_cover, dist_to_reef, dive_site, beach_width, near_dist_beach, dist_to_access_points, class, rating, num_reviews, number_rooms, air_trans, bar, beachfront, biz_center, breakfast, concierge, conference, free_parking, gym, laundry, mtg_rooms, multilingual, no_smoke, wheelchair, wifi, dist_to_airport, city)
 
 data_summary <- as.data.frame(data_summary)
-
-#write.csv(data_summary, file = "data_summary.csv"
-
-```
-
-```{r}
-
-# Regression models
-
-simple <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + city, data = data4)
-summary(simple)
-
-simple_2 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points, data = data4)
-summary(simple_2)
-
-simple_3 <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking, data = data4)
-summary(simple_3)
-
-simple_city <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking + city, data = data4)
-summary(simple_city)
-
-benefits_reg <- stargazer(simple, simple_3, simple_city, type = "html", report = "vc*", model.numbers = F, digits = 9, digits.extra = 1, 
-                         title = "Ecotourism Log-Linear Regression Results",
-                         dep.var.labels=c("Log of Standard Hotel Room Price"),
-                         column.labels = c("Simple", "Model 2", "Model w/ City"),
-                         covariate.labels = c("Coral Cover", "Beach Width", "Rating", "Class", "Distance to Reef", "Distance to Access Pts.", "Beachfront", "Pool", "Conference", "Concierge", "Gym", "Wifi", "Breakfast", "Air Transport", "Free Parking", "Key West", "Miami Beach"),
-                         out = "benefits_reg.html")
-
-# These same models by city
-
-simple_fl <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking, data = data_fl)
-summary(simple_fl)
-
-simple_kw <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking, data = data_kw)
-summary(simple_kw)
-
-simple_mb <- lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking, data = data_mb)
-summary(simple_mb)
-
-benefits_city <- stargazer(simple_fl, simple_kw, simple_mb, type = "html", report = "vc*", model.numbers = F, digits = 9, digits.extra = 1, 
-                         title = "Ecotourism Log-Linear Regression Results by City",
-                         dep.var.labels=c("Log of Standard Hotel Room Price"),
-                         column.labels = c("Ft. Lauderdale", "Key West", "Miami Beach"),
-                         covariate.labels = c("Coral Cover", "Beach Width", "Rating", "Class", "Distance to Reef", "Distance to Access Pts.", "Beachfront", "Pool", "Conference", "Concierge", "Gym", "Wifi", "Breakfast", "Air Transport", "Free Parking"),
-                         out = "benefits_city.html")
-
-```
-
-```{r}
-
-model <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating, data = data4)
-summary(model)
-
-model1 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef, data = data4)
-summary(model1)
-
-model2 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points, data = data4)
-summary(model2)
-
-model3 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews, data = data4)
-summary(model3)
-
-model4 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms, data = data4)
-summary(model4)
-
-model5 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans, data = data4)
-summary(model5)
-
-model6 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar, data = data4)
-summary(model6)
-
-model7 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront, data = data4)
-summary(model7)
-
-model8 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center, data = data4)
-summary(model8)
-
-model9 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast, data = data4)
-summary(model9)
-
-model10 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge, data = data4)
-summary(model10)
-
-model11 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference, data = data4)
-summary(model11)
-
-model12 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking, data = data4)
-summary(model12)
-
-model13 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym, data = data4)
-summary(model13)
-
-model14 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry, data = data4)
-summary(model14)
-
-model15 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms, data = data4)
-summary(model15)
-
-model16 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual, data = data4)
-summary(model16)
-
-model18 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual + no_smoke + wheelchair, data = data4)
-summary(model18)
-
-model19 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual + no_smoke + wheelchair + wifi, data = data4)
-summary(model19)
-
-model20 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual + no_smoke + wheelchair + wifi + dist_to_airport, data = data4)
-summary(model20)
-
-################################### Ones to include in report
-
-model_1 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating, data = data4)
-summary(model_1)
-mean(vif(model_1))
-
-model21 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points, data = data4)
-summary(model21)
-mean(vif(model21))
-
-model22 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data4)
-summary(model22)
-vif(model22)
-mean(vif(model22))
-
-model23 <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference + city, data = data4)
-summary(model23)
-
-#lm(log(avg_price) ~ coral_cover + beach_width + rating + class + dist_to_reef + dist_to_access_points + beachfront + pool + conference + concierge + gym + wifi + breakfast + air_trans + free_parking
-
-report <- stargazer(model_1, model21, model22, type = "html", model.numbers = F, digits = 9, title = "Ecotourism Log-Linear Aggregate Regression Results", dep.var.labels = c("Log of Standard Hotel Room Price"),
-                    covariate.labels = c("Coral Cover", "Beach Width", "Hotel Class", "Guest Rating", "Distance to Reef", "Distance to Access", "# Rooms", "Beachfront", "Conference Center"),
-                    column.labels = c("1", "2", "3", "4"),
-                    out = "report.html")
-
-############################################### City models
-
-model22_city <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference + city, data = data4)
-summary(model22_city)
-mean(vif(model22_city))
-vif(model22_city)
-
-data_mb <- data4 %>% 
-  filter(city == "MiamiBeach")
-
-data_kw <- data4 %>% 
-  filter(city == "KeyWest")
-
-data_fl <- data4 %>% 
-  filter(city == "FtLauderdale")
-
-model22_fl <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_fl)
-summary(model22_fl)
-mean(vif(model22_fl))
-vif(model22_fl)
-
-model22_kw <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_kw)
-summary(model22_kw)
-mean(vif(model22_kw))
-vif(model22_kw)
-
-model22_mb <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_mb)
-summary(model22_mb)
-mean(vif(model22_mb))
-vif(model22_mb)
-
-report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb, type = "html", model.numbers = F, digits = 9, title = "Ecotourism Log-Linear Local Regression Results", dep.var.labels = c("Log of Standard Hotel Room Price"),
-                    covariate.labels = c("Coral Cover", "Beach Width", "Hotel Class", "Guest Rating", "Distance to Reef", "Distance to Access", "# Rooms", "Beachfront", "Conference Center", "Key West", "Miami Beach"),
-                    column.labels = c("3 + City", "Fort Lauderdale", "Key West", "Miami Beach"),
-                    out = "report_city.html")
-
-#######################################################
-
-#compare <- stargazer(model, model1, model2, model3, model4, model5, model6, model7, model8, model9, model10, model11, model12, model13, model14, model15, model16, model17, model18, model19, model20, type = "html", report = "vc*", model.numbers = F, digits = 9, 
-                        # title = "Ecotourism Log-Linear Regression Results by City",
-                        # dep.var.labels=c("Log of Standard Hotel Room Price"),
-                        # column.labels = c("Model", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"),
-                        # out = "compare.html")
-
-all <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + beach_width + dist_to_access_points + dive_site + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual + no_smoke + wheelchair + wifi + dist_to_airport, data = data4)
-summary(all)
-
-all_city <- lm(log(avg_price) ~ coral_cover + beach_width + class + rating + dist_to_reef + dive_site + beach_width + near_dist_beach + dist_to_access_points + num_reviews + number_rooms + air_trans + bar + beachfront + biz_center + breakfast + concierge + conference + free_parking + gym + laundry + mtg_rooms + multilingual + no_smoke + wheelchair + wifi + dist_to_airport + city, data = data4)
-summary(all_city)
-
-
 
 ```
 
@@ -306,25 +123,25 @@ cities <- data5 %>%
   )
 cities
 
-# Re-run pooled models with adjusted metrics
-
+# Run pooled city models with adjusted metrics
 model_1 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating, data = data5)
 summary(model_1)
 mean(vif(model_1))
 AIC(model_1)
 
-model21 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points, data = data5)
-summary(model21)
-mean(vif(model21))
-AIC(model21)
+model_2 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points, data = data5)
+summary(model_2)
+mean(vif(model_2))
+AIC(model_2)
 
-model22 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data5)
-summary(model22)
-vif(model22)
-mean(vif(model22))
-AIC(model22)
+model_3 <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data5)
+summary(model_3)
+vif(model_3)
+mean(vif(model_3))
+AIC(model_3)
 
-report <- stargazer(model_1, model21, model22, 
+# Output model results into a stargazer table
+report <- stargazer(model_1, model_2, model_3, 
                     type = "html", 
                     model.numbers = F, 
                     digits = 4, 
@@ -335,14 +152,14 @@ report <- stargazer(model_1, model21, model22,
                     column.labels = c("1", "2", "3"),
                     out = "report_km2.html")
 
-# Re-run city and local models with adjusted metrics
+# Run city and local models with adjusted metrics
+model_city <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference + city, data = data5)
+summary(model_city)
+mean(vif(model_city))
+vif(model_city)
+AIC(model_city)
 
-model22_city <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference + city, data = data5)
-summary(model22_city)
-mean(vif(model22_city))
-vif(model22_city)
-AIC(model22_city)
-
+# Filter data for each individual city
 data_mb <- data5 %>% 
   filter(city == "MiamiBeach")
 
@@ -352,25 +169,27 @@ data_kw <- data5 %>%
 data_fl <- data5 %>% 
   filter(city == "FtLauderdale")
 
-model22_fl <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_fl)
-summary(model22_fl)
-mean(vif(model22_fl))
-vif(model22_fl)
-AIC(model22_fl)
+# Run a model for each individual city
+model_fl <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_fl)
+summary(model_fl)
+mean(vif(model_fl))
+vif(model_fl)
+AIC(model_fl)
 
-model22_kw <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_kw)
-summary(model22_kw)
-mean(vif(model22_kw))
-vif(model22_kw)
-AIC(model22_kw)
+model_kw <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_kw)
+summary(model_kw)
+mean(vif(model_kw))
+vif(model_kw)
+AIC(model_kw)
 
-model22_mb <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_mb)
-summary(model22_mb)
-mean(vif(model22_mb))
-vif(model22_mb)
-AIC(model22_mb)
+model_mb <- lm(log(avg_price) ~ coral_km2 + beach_width + class + rating + dist_to_reef + dist_to_access_points + number_rooms + beachfront + conference, data = data_mb)
+summary(model_mb)
+mean(vif(model_mb))
+vif(model_mb)
+AIC(model_mb)
 
-report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb, 
+# Output model results in a stargazer table
+report_city <- stargazer(model_city, model_fl, model_kw, model_mb, 
                          type = "html", 
                          model.numbers = F, 
                          digits = 4, 
@@ -381,6 +200,7 @@ report_city <- stargazer(model22_city, model22_fl, model22_kw, model22_mb,
                          column.labels = c("3 + City", "Fort Lauderdale", "Key West", "Miami Beach"),
                          out = "report_city_km2.html")
 
+# Calculate variance metrics
 var(data5$coral_km2)
 var(data5$beach_width)
 
@@ -391,7 +211,6 @@ var(data_mb$coral_km2)
 var(data_fl$beach_width)
 var(data_kw$beach_width)
 var(data_mb$beach_width)
-
 
 ```
 
