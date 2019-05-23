@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This script was used for statistical analysis as part of the 2019-19 Bren School Master's Thesis Project Naturally Insured.
+This script was used for statistical analysis as part of the 2019-19 Bren School Master's Thesis Project Naturally Insured. For more information, visit https://naturallyinsured.weebly.com/
 
 ```{r}
 
